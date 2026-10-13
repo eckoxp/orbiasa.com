@@ -8,8 +8,8 @@ import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 const OurServices = () => {
   const { t, isRTL } = useLanguage();
   const { ref: servicesRef, isVisible: isServicesVisible } = useScrollAnimation({
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
+    threshold: 0.03,
+    rootMargin: '0px 0px 140px 0px'
   });
 
   const services = [
@@ -92,12 +92,12 @@ const OurServices = () => {
         {/* Enhanced Section Title */}
         <div className={`mb-20 ${isRTL ? 'text-right' : 'text-left'}`}>
           {/* Title with Slide-in Animation (Right to Left) */}
-          <h2 className={`text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 ${isRTL ? 'font-arabic' : 'font-english'} ${isServicesVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[100px]'}`} style={{ transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)', transitionDelay: '0.3s' }}>
+          <h2 className={`text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 ${isRTL ? 'font-arabic' : 'font-english'} ${isServicesVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[40px]'}`} style={{ transition: 'all 0.45s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: '0.04s' }}>
             {isRTL ? 'خدماتنا' : 'Our Services'}
           </h2>
           
           {/* Description with Slide-in Animation (Left to Right) */}
-          <p className={`text-lg md:text-xl text-gray-300 max-w-3xl leading-relaxed ${isRTL ? 'font-arabic text-right ml-auto' : 'font-english text-left'} ${isServicesVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[-100px]'}`} style={{ transition: 'all 1s cubic-bezier(0.4, 0, 0.2, 1)', transitionDelay: '0.9s' }}>
+          <p className={`text-lg md:text-xl text-gray-300 max-w-3xl leading-relaxed ${isRTL ? 'font-arabic text-right ml-auto' : 'font-english text-left'} ${isServicesVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[-40px]'}`} style={{ transition: 'all 0.45s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: '0.1s' }}>
             {isRTL 
               ? 'نقدم حلولاً إبداعية شاملة في مجال الإنتاج المرئي، مصممة خصيصاً لتلبية احتياجاتك وتجاوز توقعاتك'
               : 'We provide comprehensive creative solutions in visual production, specifically designed to meet your needs and exceed your expectations'
@@ -110,7 +110,7 @@ const OurServices = () => {
           {services.map((service, index) => {
             const IconComponent = service.icon;
             return (
-              <div key={service.key} className={`${isServicesVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[50px]'}`} style={{ transition: 'all 1s cubic-bezier(0.4, 0, 0.2, 1)', transitionDelay: `${1.5 + (index * 0.3)}s` }}>
+              <div key={service.key} className={`${isServicesVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[24px]'}`} style={{ transition: 'all 0.42s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: `${0.16 + (index * 0.06)}s` }}>
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/20">
                   
                   {/* Service Icon */}

@@ -235,17 +235,26 @@ textarea:focus {
 }
 
 .animate-slide-in-right {
-  animation: slideInFromRight 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: slideInFromRight 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-slide-in-left {
-  animation: slideInFromLeft 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: slideInFromLeft 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-slide-in-bottom {
-  animation: slideInFromBottom 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: slideInFromBottom 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-slide-in-top {
-  animation: slideInFromTop 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: slideInFromTop 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-in-right,
+  .animate-slide-in-left,
+  .animate-slide-in-bottom,
+  .animate-slide-in-top {
+    animation-duration: 0.01ms;
+  }
 }

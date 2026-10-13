@@ -198,8 +198,8 @@ const VideoThumbnail: React.FC<{
 const Movies = () => {
   const { t, isRTL } = useLanguage();
   const { ref: moviesRef, isVisible: isMoviesVisible } = useScrollAnimation({
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
+    threshold: 0.03,
+    rootMargin: '0px 0px 140px 0px'
   });
   const [visibleCounts, setVisibleCounts] = useState<{ [key: string]: number }>({
     advertisements: 4,
@@ -405,7 +405,7 @@ const Movies = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10">
         {/* Enhanced Section Title */}
         <div className={`mb-20 ${isRTL ? 'text-right' : 'text-left'}`}>
-          <h2 className={`text-4xl md:text-5xl lg:text-6xl font-bold text-orbia-pink mb-6 ${isRTL ? 'font-arabic' : 'font-english'} ${isMoviesVisible ? 'animate-slide-in-right' : 'opacity-0 translate-x-[100px]'}`} style={{ transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)', transitionDelay: '0.3s' }}>
+          <h2 className={`text-4xl md:text-5xl lg:text-6xl font-bold text-orbia-pink mb-6 ${isRTL ? 'font-arabic' : 'font-english'} ${isMoviesVisible ? 'animate-slide-in-right' : 'opacity-0 translate-x-[40px]'}`}>
             {isRTL ? 'أعمال الانتاج المرئي' : 'Visual Production Works'}
           </h2>
         </div>
@@ -415,7 +415,7 @@ const Movies = () => {
           const videos = mergedVideos(key);
           const visible = visibleCounts[key as string] ?? 4;
 			return (
-				<div key={category.key} id={`cat-${category.key}`} className={`mb-32 ${isMoviesVisible ? 'animate-slide-in-bottom' : 'opacity-0 translate-y-[50px]'}`} style={{ transition: 'all 1s cubic-bezier(0.4, 0, 0.2, 1)', transitionDelay: `${1.5 + (categoryIndex * 0.5)}s` }}>
+				<div key={category.key} id={`cat-${category.key}`} className={`mb-32 ${isMoviesVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[24px]'}`} style={{ transition: 'all 0.45s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: `${0.1 + (categoryIndex * 0.08)}s` }}>
             {/* Enhanced Category Header */}
             <div className={`mb-12 ${isRTL ? 'text-right' : 'text-left'}`}>
               <div className={`flex items-baseline justify-center gap-3 sm:gap-4 md:gap-6 flex-wrap sm:flex-nowrap`}>
