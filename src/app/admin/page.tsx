@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { MovieCategory, PhotoCategory, MovieRow, PhotoRow } from '@/lib/db';
 import { Plus, Edit, Trash2, Film, Image, Save, X, Upload, LogOut, Globe } from 'lucide-react';
+import { upload } from '@vercel/blob/client';
 
 interface CategoryData {
   slug: string;
@@ -25,6 +26,8 @@ const AdminPage: React.FC = () => {
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [editingMovie, setEditingMovie] = useState<MovieRow | null>(null);
   const [editingPhoto, setEditingPhoto] = useState<PhotoRow | null>(null);
+  const [movieVideoFile, setMovieVideoFile] = useState<File | null>(null);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
 
   const [movie, setMovie] = useState({
     category: 'advertisements' as MovieCategory,
@@ -97,6 +100,8 @@ const AdminPage: React.FC = () => {
       title_en: '',
       video_url: ''
     });
+    setMovieVideoFile(null);
+    setVideoUploadProgress(0);
     setEditingMovie(null);
   };
 
@@ -114,9 +119,31 @@ const AdminPage: React.FC = () => {
 
   const submitMovie = async (e: React.FormEvent) => {
     e.preventDefault();
+    setBusy(true);
     try {
-    const fd = new FormData();
-    Object.entries(movie).forEach(([k, v]) => fd.append(k, String(v)));
+      let videoUrl = movie.video_url.trim();
+
+      if (movieVideoFile) {
+        const safeName = movieVideoFile.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+        const blob = await upload(`movies/${Date.now()}-${safeName}`, movieVideoFile, {
+          access: 'public',
+          handleUploadUrl: '/api/admin/video-upload',
+          multipart: true,
+          contentType: movieVideoFile.type,
+          onUploadProgress: ({ percentage }) => setVideoUploadProgress(Math.round(percentage)),
+        });
+        videoUrl = blob.url;
+      }
+
+      if (!videoUrl) {
+        throw new Error(isRTL ? 'أدخل رابط فيديو أو اختر ملف فيديو لرفعه.' : 'Enter a video URL or choose a video file to upload.');
+      }
+
+      const fd = new FormData();
+      fd.append('category', movie.category);
+      fd.append('title_ar', movie.title_ar);
+      fd.append('title_en', movie.title_en);
+      fd.append('video_url', videoUrl);
       
       if (editingMovie) {
         fd.append('id', editingMovie.id);
@@ -129,13 +156,15 @@ const AdminPage: React.FC = () => {
         fd.append('thumbnail', thumbnailFile);
       }
       
-    await call('/api/admin/movies', fd);
-    await refresh();
+      await call('/api/admin/movies', fd);
+      await refresh();
       setShowMovieModal(false);
       resetMovieForm();
       alert(editingMovie ? 'Movie updated successfully!' : 'Movie added successfully!');
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Error saving movie');
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -487,9 +516,59 @@ const AdminPage: React.FC = () => {
                     placeholder={isRTL ? 'رابط Dropbox أو YouTube/Vimeo' : 'https://dropbox.com/... or YouTube/Vimeo URL'}
                     value={movie.video_url}
                     onChange={(e) => setMovie({ ...movie, video_url: e.target.value })}
-                    required
                   />
                 </div>
+              </div>
+
+              <div className="flex items-center gap-4 text-xs text-gray-500">
+                <div className="h-px flex-1 bg-gray-700" />
+                <span>{isRTL ? 'أو ارفع ملف فيديو مباشرة' : 'Or upload a video file directly'}</span>
+                <div className="h-px flex-1 bg-gray-700" />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  {isRTL ? 'رفع ملف الفيديو' : 'Upload Video File'}
+                </label>
+                <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-600 p-6 transition-colors hover:border-red-500">
+                  <Upload className="h-9 w-9 text-gray-400" />
+                  <span className="text-sm text-gray-300">
+                    {movieVideoFile
+                      ? movieVideoFile.name
+                      : (isRTL ? 'اختر ملف فيديو من جهازك' : 'Choose a video file from your device')}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {isRTL ? 'MP4، WebM، MOV — يتم الرفع مباشرة إلى التخزين' : 'MP4, WebM, MOV — uploaded directly to storage'}
+                  </span>
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime,video/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      setMovieVideoFile(e.target.files?.[0] || null);
+                      setVideoUploadProgress(0);
+                    }}
+                  />
+                </label>
+                {videoUploadProgress > 0 && (
+                  <div className="mt-3">
+                    <div className="mb-1 flex justify-between text-xs text-gray-400">
+                      <span>{isRTL ? 'جاري رفع الفيديو' : 'Uploading video'}</span>
+                      <span>{videoUploadProgress}%</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-gray-700">
+                      <div
+                        className="h-full rounded-full bg-red-500 transition-[width] duration-200"
+                        style={{ width: `${videoUploadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+                <p className={`mt-2 text-xs text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  {isRTL
+                    ? 'عند اختيار ملف، سيتم استخدامه بدل الرابط المكتوب.'
+                    : 'When a file is selected, it will be used instead of the entered URL.'}
+                </p>
               </div>
 
               {/* Thumbnail Upload Section */}
