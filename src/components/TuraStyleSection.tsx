@@ -66,7 +66,7 @@ const TuraStyleSection = () => {
               <div className={`reveal-soft mt-6 h-1 w-24 rounded-full bg-orbia-pink ${isRTL ? 'ml-auto' : 'mr-auto'} ${isSectionVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.08s' }} />
               
               {/* Description with Slide-in Animation (Left to Right) */}
-              <p className={`reveal-soft mt-8 text-lg md:text-xl text-gray-600 leading-relaxed ${isRTL ? 'font-arabic' : 'font-english'} ${isSectionVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.13s' }}>
+              <p className={`reveal-soft text-justify mt-8 text-lg md:text-xl text-gray-600 leading-relaxed ${isRTL ? 'font-arabic' : 'font-english'} ${isSectionVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.13s' }}>
                 {isRTL 
                   ? "ﻧﻤﻠﻚ ﻓﺮﻳﻘﺎ ﻣﻦ ﺧﺒﺮات ﻣﺘﺮاﻛﻤﺔ ﺗﺘﺠﺎوز ﻋﺸﺮ ﺳﻨﻮات ﻓﻲ ﻣﺠﺎل اﻹﻧﺘﺎج، ﻳﺠﻤﻊ ﺑﻴﻦ اﻟﺤﺮﻓﺔ واﻟﻤﺮوﻧﺔ، وﻳﺠﻴﺪ اﻟﺘﻌﺎﻣﻞ ﻣﻊ ﻛﻞ ﻣﺮﺣﻠﺔ ﻣﻦ ﻣﺮاﺣﻞ اﻟﻌﻤﻞ اﻹﺑﺪاﻋﻲ"
                   : "We have a team with over ten years of accumulated experience in production, combining craftsmanship with flexibility, and excelling at handling every stage of the creative process."
@@ -88,7 +88,7 @@ const TuraStyleSection = () => {
                     {isRTL ? 'رؤيتنا' : 'Our Vision'}
                   </h3>
                 </div>
-                <p className={`text-gray-600 leading-relaxed text-sm ${isRTL ? 'font-arabic' : 'font-english'}`}>
+                <p className={`text-justify text-gray-600 leading-relaxed text-sm ${isRTL ? 'font-arabic' : 'font-english'}`}>
                   {isRTL
                     ? 'في أوربيا، نحن لا نُنتج فحسب، بل نسعى لصناعة أثر حقيقي في مجال صناعة المحتوى. نطمح أن نكون من الأسماء البارزة التي تُسهم في تشكيل الهوية البصرية للوطن وتوثيق مسيرته نحو المستقبل، ضمن إطار رؤية 2030'
                     : "In ORBIA, we don't just produce, but we strive to deliver a real impact in the content industry. We aspire to be among the prominent names that contribute to shaping the nation's visual identity and documenting its journey towards the future, within the framework of Vision 2030."}
@@ -105,7 +105,7 @@ const TuraStyleSection = () => {
                     {isRTL ? 'رسالتنا' : 'Our Mission'}
                   </h3>
                 </div>
-                <p className={`text-gray-600 leading-relaxed text-sm ${isRTL ? 'font-arabic' : 'font-english'}`}>
+                <p className={`text-justify text-gray-600 leading-relaxed text-sm ${isRTL ? 'font-arabic' : 'font-english'}`}>
                   {isRTL
                     ? 'صناعة محتوى يحمل روحًا فنية عالية، يلامس الذائقة ويترك أثرًا يتجاوز التوقع؛ محتوى يُلهم ويُبصر ويَبقى'
                     : 'Creating content that carries a high artistic spirit, one that touches taste and leaves an impact beyond expectation; content that inspires, envisions, and endures.'}
@@ -122,7 +122,7 @@ const TuraStyleSection = () => {
                     {t('ourStory.title')}
                   </h3>
                 </div>
-                <p className={`text-gray-600 leading-relaxed text-sm ${isRTL ? 'font-arabic' : 'font-english'}`}>
+                <p className={`text-justify text-gray-600 leading-relaxed text-sm ${isRTL ? 'font-arabic' : 'font-english'}`}>
                   {t('ourStory.description')}
                 </p>
               </div>
@@ -137,7 +137,7 @@ const TuraStyleSection = () => {
                     {isRTL ? 'اختصاصنا' : 'Our Expertise'}
                   </h3>
                 </div>
-                <p className={`text-gray-600 leading-relaxed text-sm ${isRTL ? 'font-arabic' : 'font-english'}`}>
+                <p className={`text-justify text-gray-600 leading-relaxed text-sm ${isRTL ? 'font-arabic' : 'font-english'}`}>
                   {isRTL
                     ? 'ننفذ وندير الأعمال بداية من الفكرة وتطويرها وإدارتها وحتى تنفيذها بأعلى المعايير على يد فريق عمل من المتخصصين في كافة المجالات الإبداعية والفنية'
                     : 'We execute and manage projects from the initial idea, through development and management, to implementation with the highest standards by a team of specialists in all creative and artistic fields.'}

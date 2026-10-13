@@ -141,7 +141,7 @@ const Photos = () => {
             <h3 className={`shrink-0 text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white ${isRTL ? 'font-arabic' : 'font-english'}`}>
               {title}
             </h3>
-            <p className={`text-[13px] sm:text-sm md:text-sm lg:text-base text-white/80 leading-relaxed ${isRTL ? 'font-arabic text-right' : 'font-english text-left'} max-w-[42ch] sm:max-w-[48ch] lg:max-w-[52ch]`}>
+            <p className={`text-justify text-[13px] sm:text-sm md:text-sm lg:text-base text-white/80 leading-relaxed ${isRTL ? 'font-arabic' : 'font-english'} max-w-[42ch] sm:max-w-[48ch] lg:max-w-[52ch]`}>
               {description}
             </p>
           </div>

@@ -97,7 +97,7 @@ const OurServices = () => {
           </h2>
           
           {/* Description with Slide-in Animation (Left to Right) */}
-          <p className={`reveal-soft text-lg md:text-xl text-gray-300 max-w-3xl leading-relaxed ${isRTL ? 'font-arabic text-right ml-auto' : 'font-english text-left'} ${isServicesVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.09s' }}>
+          <p className={`reveal-soft text-justify text-lg md:text-xl text-gray-300 max-w-3xl leading-relaxed ${isRTL ? 'font-arabic ml-auto' : 'font-english'} ${isServicesVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.09s' }}>
             {isRTL 
               ? 'نقدم حلولاً إبداعية شاملة في مجال الإنتاج المرئي، مصممة خصيصاً لتلبية احتياجاتك وتجاوز توقعاتك'
               : 'We provide comprehensive creative solutions in visual production, specifically designed to meet your needs and exceed your expectations'
@@ -126,7 +126,7 @@ const OurServices = () => {
                   </h3>
                   
                   {/* Service Description */}
-                  <p className={`text-gray-300 leading-relaxed text-center ${isRTL ? 'font-arabic' : 'font-english'}`}>
+                  <p className={`text-justify text-gray-300 leading-relaxed ${isRTL ? 'font-arabic' : 'font-english'}`}>
                     {isRTL ? service.description.ar : service.description.en}
                   </p>
                   
