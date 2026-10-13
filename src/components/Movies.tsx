@@ -5,6 +5,27 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Play, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
+const getYouTubeVideoId = (rawUrl: string): string | null => {
+  try {
+    const url = new URL(rawUrl);
+    const host = url.hostname.replace(/^www\./, '');
+
+    if (host === 'youtu.be') {
+      return url.pathname.split('/').filter(Boolean)[0] || null;
+    }
+
+    if (host === 'youtube.com' || host === 'm.youtube.com') {
+      if (url.pathname === '/watch') return url.searchParams.get('v');
+      const parts = url.pathname.split('/').filter(Boolean);
+      if (['embed', 'shorts', 'live'].includes(parts[0])) return parts[1] || null;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
+
 // Component to show video thumbnails with hybrid approach
 const VideoThumbnail: React.FC<{ 
   videoUrl: string; 
@@ -251,6 +272,7 @@ const Movies = () => {
   // Preload video metadata for faster playback
   const preloadVideo = (videoUrl: string) => {
     if (preloadedVideos.has(videoUrl)) return;
+    if (getYouTubeVideoId(videoUrl) || videoUrl.includes('vimeo.com')) return;
 
     const video = document.createElement('video');
     video.preload = 'metadata';
@@ -275,10 +297,8 @@ const Movies = () => {
 
   const getVideoThumbnail = (videoUrl: string): string => {
     // For YouTube videos
-    if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
-      const videoId = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1];
-      if (videoId) return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-    }
+    const youtubeId = getYouTubeVideoId(videoUrl);
+    if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
     
     // For Vimeo videos
     if (videoUrl.includes('vimeo.com')) {
@@ -341,7 +361,7 @@ const Movies = () => {
     }
     
     // Handle YouTube URLs
-    if (raw.includes('youtube.com/watch') || raw.includes('youtu.be/')) {
+    if (getYouTubeVideoId(raw)) {
       console.log('YouTube URL detected, returning as-is for embed handling');
       return raw;
     }
@@ -486,7 +506,17 @@ const Movies = () => {
             
             {/* Video Container */}
             <div className="aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl">
-              <video 
+              {getYouTubeVideoId(player.url) ? (
+                <iframe
+                  className="w-full h-full"
+                  src={`https://www.youtube-nocookie.com/embed/${getYouTubeVideoId(player.url)}?autoplay=1&rel=0`}
+                  title={player.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              ) : (
+              <video
                 controls 
                 playsInline 
                 autoPlay
@@ -569,6 +599,7 @@ const Movies = () => {
                   </a>
                 </p>
               </video>
+              )}
             </div>
             
             {/* Video Title */}
