@@ -405,7 +405,7 @@ const Movies = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10">
         {/* Enhanced Section Title */}
         <div className={`mb-20 ${isRTL ? 'text-right' : 'text-left'}`}>
-          <h2 className={`text-4xl md:text-5xl lg:text-6xl font-bold text-orbia-pink mb-6 ${isRTL ? 'font-arabic' : 'font-english'} ${isMoviesVisible ? 'animate-slide-in-right' : 'opacity-0 translate-x-[40px]'}`}>
+          <h2 className={`reveal-soft text-4xl md:text-5xl lg:text-6xl font-bold text-orbia-pink mb-6 ${isRTL ? 'font-arabic' : 'font-english'} ${isMoviesVisible ? 'reveal-soft-visible' : ''}`}>
             {isRTL ? 'أعمال الانتاج المرئي' : 'Visual Production Works'}
           </h2>
         </div>
@@ -415,7 +415,7 @@ const Movies = () => {
           const videos = mergedVideos(key);
           const visible = visibleCounts[key as string] ?? 4;
 			return (
-				<div key={category.key} id={`cat-${category.key}`} className={`mb-32 ${isMoviesVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[24px]'}`} style={{ transition: 'all 0.45s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: `${0.1 + (categoryIndex * 0.08)}s` }}>
+				<div key={category.key} id={`cat-${category.key}`} className={`reveal-soft mb-32 ${isMoviesVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: `${0.08 + (categoryIndex * 0.08)}s` }}>
             {/* Enhanced Category Header */}
             <div className={`mb-12 ${isRTL ? 'text-right' : 'text-left'}`}>
               <div className={`flex items-baseline justify-center gap-3 sm:gap-4 md:gap-6 flex-wrap sm:flex-nowrap`}>

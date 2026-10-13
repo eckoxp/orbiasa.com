@@ -250,11 +250,36 @@ textarea:focus {
   animation: slideInFromTop 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+/* Soft reveal used for sections as they enter the viewport. */
+.reveal-soft {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0) scale(0.985);
+  filter: blur(3px);
+  transition:
+    opacity 0.46s ease-out,
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.38s ease-out;
+  will-change: opacity, transform, filter;
+}
+
+.reveal-soft.reveal-soft-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  filter: blur(0);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-slide-in-right,
   .animate-slide-in-left,
   .animate-slide-in-bottom,
   .animate-slide-in-top {
     animation-duration: 0.01ms;
+  }
+
+  .reveal-soft {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
   }
 }

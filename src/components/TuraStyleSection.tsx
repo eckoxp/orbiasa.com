@@ -58,15 +58,15 @@ const TuraStyleSection = () => {
           <div className={`${isRTL ? 'lg:col-start-2 lg:row-start-1' : 'lg:col-start-1 lg:row-start-1'} self-center flex items-center justify-center`}>
             <div className={`${isRTL ? 'text-right' : 'text-left'} max-w-lg`}>
               {/* Title with Slide-in Animation (Right to Left) */}
-              <h2 id="tura-style-title" className={`text-3xl md:text-4xl lg:text-5xl font-bold text-orbia-pink leading-tight mb-6 ${isRTL ? 'font-arabic' : 'font-english'} ${isSectionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[40px]'}`} style={{ transition: 'all 0.45s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: '0.04s' }}>
+              <h2 id="tura-style-title" className={`reveal-soft text-3xl md:text-4xl lg:text-5xl font-bold text-orbia-pink leading-tight mb-6 ${isRTL ? 'font-arabic' : 'font-english'} ${isSectionVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.03s' }}>
                 {isRTL ? "حلمنا واسع كفضائنا" : "Our dream is as vast as our space"}
               </h2>
               
               {/* Decorative line with Slide-in Animation (Left to Right) */}
-              <div className={`mt-6 h-1 w-24 rounded-full bg-orbia-pink ${isRTL ? 'ml-auto' : 'mr-auto'} ${isSectionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[-30px]'}`} style={{ transition: 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: '0.1s' }} />
+              <div className={`reveal-soft mt-6 h-1 w-24 rounded-full bg-orbia-pink ${isRTL ? 'ml-auto' : 'mr-auto'} ${isSectionVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.08s' }} />
               
               {/* Description with Slide-in Animation (Left to Right) */}
-              <p className={`mt-8 text-lg md:text-xl text-gray-600 leading-relaxed ${isRTL ? 'font-arabic' : 'font-english'} ${isSectionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[-40px]'}`} style={{ transition: 'all 0.45s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: '0.14s' }}>
+              <p className={`reveal-soft mt-8 text-lg md:text-xl text-gray-600 leading-relaxed ${isRTL ? 'font-arabic' : 'font-english'} ${isSectionVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.13s' }}>
                 {isRTL 
                   ? "ﻧﻤﻠﻚ ﻓﺮﻳﻘﺎ ﻣﻦ ﺧﺒﺮات ﻣﺘﺮاﻛﻤﺔ ﺗﺘﺠﺎوز ﻋﺸﺮ ﺳﻨﻮات ﻓﻲ ﻣﺠﺎل اﻹﻧﺘﺎج، ﻳﺠﻤﻊ ﺑﻴﻦ اﻟﺤﺮﻓﺔ واﻟﻤﺮوﻧﺔ، وﻳﺠﻴﺪ اﻟﺘﻌﺎﻣﻞ ﻣﻊ ﻛﻞ ﻣﺮﺣﻠﺔ ﻣﻦ ﻣﺮاﺣﻞ اﻟﻌﻤﻞ اﻹﺑﺪاﻋﻲ"
                   : "We have a team with over ten years of accumulated experience in production, combining craftsmanship with flexibility, and excelling at handling every stage of the creative process."
@@ -79,7 +79,7 @@ const TuraStyleSection = () => {
           <div className={`${isRTL ? 'lg:col-start-1 lg:row-start-1' : 'lg:col-start-2 lg:row-start-1'} self-center`}>
             <div className="space-y-8">
               {/* Vision - Slide-in from Bottom */}
-              <div className={`${isRTL ? 'text-right' : 'text-left'} ${isSectionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[24px]'}`} style={{ transition: 'all 0.42s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: '0.18s' }}>
+              <div className={`reveal-soft ${isRTL ? 'text-right' : 'text-left'} ${isSectionVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.17s' }}>
                 <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="bg-orbia-pink p-2 rounded-lg text-white">
                     <VisionIcon className="h-4 w-4" />
@@ -96,7 +96,7 @@ const TuraStyleSection = () => {
               </div>
 
               {/* Mission - Slide-in from Bottom */}
-              <div className={`${isRTL ? 'text-right' : 'text-left'} ${isSectionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[24px]'}`} style={{ transition: 'all 0.42s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: '0.24s' }}>
+              <div className={`reveal-soft ${isRTL ? 'text-right' : 'text-left'} ${isSectionVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.23s' }}>
                 <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="bg-orbia-pink p-2 rounded-lg text-white">
                     <MissionIcon className="h-4 w-4" />
@@ -113,7 +113,7 @@ const TuraStyleSection = () => {
               </div>
 
               {/* Our Story - Slide-in from Bottom */}
-              <div className={`${isRTL ? 'text-right' : 'text-left'} ${isSectionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[24px]'}`} style={{ transition: 'all 0.42s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: '0.3s' }}>
+              <div className={`reveal-soft ${isRTL ? 'text-right' : 'text-left'} ${isSectionVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.29s' }}>
                 <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="bg-orbia-pink p-2 rounded-lg text-white">
                     <StoryIcon className="h-4 w-4" />
@@ -128,7 +128,7 @@ const TuraStyleSection = () => {
               </div>
 
               {/* Expertise - Slide-in from Bottom */}
-              <div className={`${isRTL ? 'text-right' : 'text-left'} ${isSectionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[24px]'}`} style={{ transition: 'all 0.42s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: '0.36s' }}>
+              <div className={`reveal-soft ${isRTL ? 'text-right' : 'text-left'} ${isSectionVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.35s' }}>
                 <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="bg-orbia-pink p-2 rounded-lg text-white">
                     <ExpertiseIcon className="h-4 w-4" />

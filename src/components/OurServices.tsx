@@ -92,12 +92,12 @@ const OurServices = () => {
         {/* Enhanced Section Title */}
         <div className={`mb-20 ${isRTL ? 'text-right' : 'text-left'}`}>
           {/* Title with Slide-in Animation (Right to Left) */}
-          <h2 className={`text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 ${isRTL ? 'font-arabic' : 'font-english'} ${isServicesVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[40px]'}`} style={{ transition: 'all 0.45s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: '0.04s' }}>
+          <h2 className={`reveal-soft text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 ${isRTL ? 'font-arabic' : 'font-english'} ${isServicesVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.03s' }}>
             {isRTL ? 'خدماتنا' : 'Our Services'}
           </h2>
           
           {/* Description with Slide-in Animation (Left to Right) */}
-          <p className={`text-lg md:text-xl text-gray-300 max-w-3xl leading-relaxed ${isRTL ? 'font-arabic text-right ml-auto' : 'font-english text-left'} ${isServicesVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[-40px]'}`} style={{ transition: 'all 0.45s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: '0.1s' }}>
+          <p className={`reveal-soft text-lg md:text-xl text-gray-300 max-w-3xl leading-relaxed ${isRTL ? 'font-arabic text-right ml-auto' : 'font-english text-left'} ${isServicesVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.09s' }}>
             {isRTL 
               ? 'نقدم حلولاً إبداعية شاملة في مجال الإنتاج المرئي، مصممة خصيصاً لتلبية احتياجاتك وتجاوز توقعاتك'
               : 'We provide comprehensive creative solutions in visual production, specifically designed to meet your needs and exceed your expectations'
@@ -110,7 +110,7 @@ const OurServices = () => {
           {services.map((service, index) => {
             const IconComponent = service.icon;
             return (
-              <div key={service.key} className={`${isServicesVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[24px]'}`} style={{ transition: 'all 0.42s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: `${0.16 + (index * 0.06)}s` }}>
+              <div key={service.key} className={`reveal-soft ${isServicesVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: `${0.14 + (index * 0.06)}s` }}>
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/20">
                   
                   {/* Service Icon */}

@@ -62,18 +62,18 @@ const Hero = () => {
             
 
             {/* Title with Slide-in Animation (Right to Left) */}
-            <h1 className={`text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-8 leading-tight ${isRTL ? 'font-arabic' : 'font-english'} ${isHeroVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[40px]'}`} style={{ transition: 'all 0.45s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: '0.05s' }}>
+            <h1 className={`reveal-soft text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-8 leading-tight ${isRTL ? 'font-arabic' : 'font-english'} ${isHeroVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.03s' }}>
               {titleText}
             </h1>
             
             
             {/* Description with Slide-in Animation (Left to Right) */}
-            <p className={`text-lg md:text-xl text-white/90 mb-12 leading-relaxed max-w-3xl ${isRTL ? 'font-arabic' : 'font-english'} ${isHeroVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[-40px]'}`} style={{ transition: 'all 0.45s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: '0.12s' }}>
+            <p className={`reveal-soft text-lg md:text-xl text-white/90 mb-12 leading-relaxed max-w-3xl ${isRTL ? 'font-arabic' : 'font-english'} ${isHeroVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.1s' }}>
               {descriptionText}
             </p>
             
             {/* Modern Glass CTA Button with Slide-in Animation (Bottom to Top) */}
-            <div className={`${isHeroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[20px]'}`} style={{ transition: 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)', transitionDelay: '0.18s' }}>
+            <div className={`reveal-soft ${isHeroVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.17s' }}>
               <button
                 onClick={scrollToContact}
                 className={`group relative inline-flex items-center gap-3 px-8 py-4 
