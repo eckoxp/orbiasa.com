@@ -418,7 +418,7 @@ const Movies = () => {
 				<div key={category.key} id={`cat-${category.key}`} className={`reveal-soft mb-32 ${isMoviesVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: `${0.08 + (categoryIndex * 0.08)}s` }}>
             {/* Enhanced Category Header */}
             <div className={`mb-12 ${isRTL ? 'text-right' : 'text-left'}`}>
-              <div className={`flex items-baseline justify-center gap-3 sm:gap-4 md:gap-6 flex-wrap sm:flex-nowrap`}>
+              <div className={`flex items-baseline gap-3 sm:gap-4 md:gap-6 flex-wrap sm:flex-nowrap ${isRTL ? 'justify-end text-right' : 'justify-start text-left'}`}>
                   <span className="shrink-0 text-gray-800">
                     {isRTL ? <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" /> : <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </span>

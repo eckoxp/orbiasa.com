@@ -121,12 +121,12 @@ const OurServices = () => {
                   </div>
                   
                   {/* Service Title */}
-                  <h3 className={`text-2xl font-bold text-white mb-4 text-center ${isRTL ? 'font-arabic' : 'font-english'}`}>
+                  <h3 className={`text-2xl font-bold text-white mb-4 ${isRTL ? 'font-arabic text-right' : 'font-english text-left'}`}>
                     {isRTL ? service.title.ar : service.title.en}
                   </h3>
                   
                   {/* Service Description */}
-                  <p className={`text-gray-300 leading-relaxed text-center ${isRTL ? 'font-arabic' : 'font-english'}`}>
+                  <p className={`text-gray-300 leading-relaxed ${isRTL ? 'font-arabic text-right' : 'font-english text-left'}`}>
                     {isRTL ? service.description.ar : service.description.en}
                   </p>
                   
