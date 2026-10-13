@@ -1,0 +1,320 @@
+{
+  "company": {
+    "name": {
+      "ar": "أوربيا",
+      "en": "ORBIA"
+    },
+    "slogan": {
+      "ar": "شركة سعودية تقف خلف العدسة وأمام الجمال",
+      "en": "A Saudi company that stands behind the lens and in front of beauty"
+    },
+    "tagline": {
+      "ar": "فنون تسمع وترى",
+      "en": "Arts that hear and see"
+    }
+  },
+  "navigation": {
+    "home": {
+      "ar": "الرئيسية",
+      "en": "Home"
+    },
+    "ourStory": {
+      "ar": "قصتنا",
+      "en": "Our Story"
+    },
+    "ourServices": {
+      "ar": "خدماتنا",
+      "en": "Our Services"
+    },
+    "movies": {
+      "ar": "الأفلام",
+      "en": "Movies"
+    },
+    "photos": {
+      "ar": "الصور",
+      "en": "Photos"
+    },
+    "ourPartners": {
+      "ar": "شركاؤنا",
+      "en": "Our Partners"
+    },
+    "contactUs": {
+      "ar": "تواصل معنا",
+      "en": "Contact Us"
+    }
+  },
+  "hero": {
+    "title": {
+      "ar": "فنون تسمع وترى",
+      "en": "Arts that hear and see"
+    },
+    "description": {
+      "ar": "ترى ما الفكرة القادمة؟ هذا سؤال نبدأ به كل يوم لنلتقط الجمال في ثقافتنا وخيالاتنا وذكرياتنا، فنقدمه على شكل وثائقيات، وكتب مصورة، وإعلانات تجارية، لنكون شريكك الموثوق في الأعمال الفنية",
+      "en": "What's the next idea? This is a question we start every day with to capture the beauty in our culture, imaginations, and memories, presenting it in the form of documentaries, illustrated books, and commercial advertisements, to be your trusted partner in artistic works."
+    },
+    "cta": {
+      "ar": "تواصل معنا",
+      "en": "Contact Us"
+    }
+  },
+  "ourStory": {
+    "title": {
+      "ar": "قصتنا",
+      "en": "Our Story"
+    },
+    "subtitle": {
+      "ar": "رواد صناعة المحتوى المرئي والإبداعي",
+      "en": "Pioneers of visual and creative content industry"
+    },
+    "description": {
+      "ar": "نؤمن أن في كل مكان زاوية متألقة، وإحساس فريد، ونحن في ترى نلمح تلك التفاصيل التي قد تغيب عن الناس. وبالفن وحده نستطيع توثيق تلك الجماليات ونقل الإحساس الموجود في تلك الأماكن لتكون ضمن عمل فني بسيط، أو كتاب مصور، أو فلم وثائقي",
+      "en": "We believe that in every place there is a shining corner, and a unique feeling, and we at ORBIA perceive those details that may be hidden from people. And with art alone, we can document those aesthetics and convey the feeling present in those places to be part of a simple artistic work, or a photographic book, or a documentary film."
+    }
+  },
+  "services": {
+    "title": {
+      "ar": "خدماتنا",
+      "en": "Our Services"
+    },
+    "films": {
+      "title": {
+        "ar": "أفلام ترى",
+        "en": "Films You See"
+      },
+      "subtitle": {
+        "ar": "نبذة عن الخدمة",
+        "en": "About the Service"
+      },
+      "description": {
+        "ar": "نحن في أوربيا نتميز بإنتاج الأفلام الوثائقية والإعلانات التجارية وتغطية الفعاليات والمقابلات التعريفية. نهتم بكل تفصيل في السيناريو والصوت والصورة لنقدم لك فيلماً مذهلاً يحقق أهدافك",
+        "en": "At ORBIA, we excel in producing documentary films, commercial advertisements, event coverage, and introductory interviews. We pay attention to every detail in the script, sound, and visuals to deliver an amazing film that achieves your goals."
+      },
+      "cta": {
+        "ar": "اطلب الخدمة",
+        "en": "Request Service"
+      }
+    },
+    "photos": {
+      "title": {
+        "ar": "صور ترى",
+        "en": "Photos You See"
+      },
+      "subtitle": {
+        "ar": "نبذة عن الخدمة",
+        "en": "About the Service"
+      },
+      "description": {
+        "ar": "نهتم بالتفاصيل الدقيقة ونبرع في إتقان الزوايا والإضاءة لنحكي قصة ونثير الخيال. نحن لا نلتقط صوراً للمكان أو المنتج أو الشخص فحسب، بل نركز على التفاصيل المعقدة",
+        "en": "We focus on intricate details and excel in mastering angles and lighting to tell a story and evoke imagination. We don't just capture images of places, products, or people, but focus on complex details."
+      },
+      "cta": {
+        "ar": "اطلب الخدمة",
+        "en": "Request Service"
+      }
+    }
+  },
+  "movies": {
+    "title": {
+      "ar": "أعمال الأفلام",
+      "en": "Film Works"
+    },
+    "documentary": {
+      "title": {
+        "ar": "أفلام وثائقية",
+        "en": "Documentary Films"
+      },
+      "description": {
+        "ar": "نؤمن في أوربيا بأن الوثائقيات تخليد للذاكرة، وأجمل سرد للذكرى، وهي الوسيلة للاحتفاء بالإرث الشخصي أو المؤسسي، وهي كذلك خيارنا لحفظ موروثنا الثقافي ومشاركته مع العالم من خلال توظيف تقنيات التصوير وجماليات السرد لنصنع لك الوثائقي الأجمل",
+        "en": "We believe at ORBIA that documentaries are a tribute to memory, and the most beautiful narrative of memory. They are the means to celebrate personal or institutional heritage, and they are also our choice to preserve our cultural heritage and share it with the world by employing photography techniques and narrative aesthetics to create the most beautiful documentary for you."
+      }
+    },
+    "commercial": {
+      "title": {
+        "ar": "إعلانات تجارية",
+        "en": "Commercial Ads"
+      },
+      "description": {
+        "ar": "الهوية المحلية مصدر فخر واعتزاز، وهي مفتاح التواصل الناجح مع الجمهور. ننتج الإعلانات التجارية بأسلوب محلي ومعايير عالمية لتحقيق الجودة والتأثير المطلوب لعملائنا",
+        "en": "Local identity is a source of pride and honor, and it is the key to successful communication with the audience. We produce commercial advertisements with a local style and global standards to achieve the desired quality and impact for our clients."
+      }
+    },
+    "institutional": {
+      "title": {
+        "ar": "التصوير المؤسسي",
+        "en": "Institutional Photography"
+      },
+      "description": {
+        "ar": "دعنا نحتفل معك بمرحلة جديدة أو تاريخ غني تنوي توثيقه لمؤسستك، وذلك لخدمة التصوير المؤسسي للوزارات والشركات. يشمل ذلك إنتاج المكتبات البصرية والصور الإعلانية، وتصوير الموظفين والمسؤولين، وتغطية الفعاليات والمشاريع",
+        "en": "Let us celebrate with you a new phase or a rich history you intend to document for your institution, and that is for the service of institutional photography for ministries and companies. This includes the production of visual libraries and advertising images, photography of employees and officials, coverage of events and projects."
+      }
+    }
+  },
+  "photos": {
+    "title": {
+      "ar": "أعمال التصوير الفوتوغرافي",
+      "en": "Photography Works"
+    },
+    "architecture": {
+      "title": {
+        "ar": "مكان وعمارة",
+        "en": "Place and Architecture"
+      },
+      "description": {
+        "ar": "نؤمن أن في كل مكان زاوية متألقة، وإحساس فريد، ونحن في أوربيا نلمح تلك التفاصيل التي قد تغيب عن الناس. وبالفن وحده نستطيع توثيق تلك الجماليات ونقل الإحساس الموجود في تلك الأماكن لتكون ضمن عمل فني بسيط، أو كتاب مصور، أو فلم وثائقي",
+        "en": "We believe that in every place there is a shining corner, and a unique feeling, and we at ORBIA perceive those details that may be hidden from people. And with art alone, we can document those aesthetics and convey the feeling present in those places to be part of a simple artistic work, or a photographic book, or a documentary film."
+      }
+    },
+    "candid": {
+      "title": {
+        "ar": "على الهامش",
+        "en": "On the Sidelines"
+      },
+      "description": {
+        "ar": "إذا تأملت أعمالنا فستعرف أننا نعيش على الفن ولا تفوتنا التفاصيل الجميلة. وهنا نستعرض بعض ما التقطته كاميرات فريقنا في أوقات فراغهم ونزهتهم أو على هامش مشاريع العملاء",
+        "en": "If you contemplate our works, you will know that we live for art and do not miss the beautiful details. Here we showcase some of what our team's cameras captured during their leisure time and outings, or on the sidelines of client projects."
+      }
+    },
+    "institutional": {
+      "title": {
+        "ar": "التصوير المؤسسي",
+        "en": "Institutional Photography"
+      },
+      "description": {
+        "ar": "ضمن سعينا لتقديم خدمات متكاملة لعملائنا فنحن نبدع أيضاً في إنتاج الأفلام المؤسسية للوزارات والشركات ويشمل ذلك فيديوهات التواصل الداخلي، تصوير الموظفين والمسؤولين، تغطية الفعاليات",
+        "en": "As part of our endeavor to provide integrated services to our clients, we also excel in producing institutional films for ministries and companies, which includes internal communication videos, photographing employees and officials, and covering events."
+      }
+    },
+    "ads": {
+      "title": {
+        "ar": "تصوير الاعلاني",
+        "en": "Advertising Photography"
+      },
+      "description": {
+        "ar": "نبدع في تصوير الإعلانات التجارية بأسلوب احترافي يبرز المنتج أو الخدمة بطريقة جذابة ومؤثرة، مع الاهتمام بالتفاصيل الإبداعية التي تحقق أهداف الحملة الإعلانية",
+        "en": "We excel in commercial advertising photography with a professional style that highlights the product or service in an attractive and impactful way, paying attention to creative details that achieve the advertising campaign's goals."
+      }
+    },
+    "coverage": {
+      "title": {
+        "ar": "تصوير التغطيات",
+        "en": "Event Coverage Photography"
+      },
+      "description": {
+        "ar": "نقدم تغطية شاملة ومتميزة للأحداث والفعاليات المهمة، مع التركيز على التقاط اللحظات الثمينة والتفاصيل الجميلة التي تحكي قصة الحدث وتنقل أجواءه الحقيقية للمشاهدين",
+        "en": "We provide comprehensive and distinguished coverage of important events and activities, focusing on capturing precious moments and beautiful details that tell the story of the event and convey its true atmosphere to viewers."
+      }
+    },
+    "portraits": {
+      "title": {
+        "ar": "تصوير البورتريه",
+        "en": "Portrait Photography"
+      },
+      "description": {
+        "ar": "نتخصص في التصوير الشخصي الذي يعكس شخصية الفرد وجماله الطبيعي، مع التركيز على الإضاءة المناسبة والزوايا التي تبرز أفضل ما في الشخص المُصور",
+        "en": "We specialize in personal photography that reflects the individual's personality and natural beauty, focusing on appropriate lighting and angles that highlight the best in the photographed person."
+      }
+    },
+    "products": {
+      "title": {
+        "ar": "تصوير المنتجات",
+        "en": "Product Photography"
+      },
+      "description": {
+        "ar": "نبرع في تصوير المنتجات بأسلوب إبداعي يبرز جمالها وخصائصها المميزة، مع الاهتمام بأدق التفاصيل والإضاءة المثالية لإظهار المنتج في أفضل صورة ممكنة",
+        "en": "We excel in product photography with a creative style that highlights their beauty and distinctive features, paying attention to the finest details and perfect lighting to show the product in the best possible way."
+      }
+    }
+  },
+  "partners": {
+    "title": {
+      "ar": "كسبنا ثقتهم",
+      "en": "We earned their trust"
+    }
+  },
+  "contact": {
+    "title": {
+      "ar": "تواصل معنا",
+      "en": "Contact Us"
+    },
+    "form": {
+      "name": {
+        "ar": "الإسم الكريم",
+        "en": "Your Name"
+      },
+      "email": {
+        "ar": "البريد الإلكتروني",
+        "en": "Email"
+      },
+      "phone": {
+        "ar": "رقم الجوال",
+        "en": "Phone Number"
+      },
+      "company": {
+        "ar": "الشركة / الجهة",
+        "en": "Company / Organization"
+      },
+      "position": {
+        "ar": "المنصب",
+        "en": "Position"
+      },
+      "message": {
+        "ar": "الرسالة",
+        "en": "Message"
+      },
+      "submit": {
+        "ar": "إرسال",
+        "en": "Send"
+      }
+    },
+    "info": {
+      "address": {
+        "ar": "الرياض، حي العارض، المملكة العربية السعودية",
+        "en": "Riyadh, Al-Arid District, Kingdom of Saudi Arabia"
+      },
+      "email": {
+        "ar": "info@orbiasa.com",
+        "en": "info@orbiasa.com"
+      },
+      "phone": {
+        "ar": "0532888291",
+        "en": "0532888291"
+      }
+    }
+  },
+  "specialProjects": {
+    "title": {
+      "ar": "المشاريع الخاصة",
+      "en": "Special Projects"
+    },
+    "description": {
+      "ar": "المشاريع الفريدة عادة ما تشمل مجموعة من المهام التي قد تتطلب مدة أطول وتخطيطاً أكثر تفصيلاً. نحن مستعدون لمساعدتك في صياغة المشروع وتحديده لبناء الملف الفني قبل التنفيذ، وتقديم عرض فني ومالي لمثل هذه المشاريع",
+      "en": "Unique projects typically involve a range of tasks that may require a longer duration and more detailed planning. We are ready to assist you in project formulation, defining it to build the artistic file before execution, and providing a technical and financial offer for such endeavors."
+    }
+  },
+  "footer": {
+    "about": {
+      "ar": "في أوربيا نبتكر أفلامًا وصورًا بجودة عالية ونحكي القصص بصريًّا. يسعدنا تواصلكم معنا",
+      "en": "At ORBIA, we craft high-quality films and photography to tell visual stories. We’d love to hear from you."
+    },
+    "links": {
+      "ar": "الروابط",
+      "en": "Links"
+    },
+    "contact": {
+      "ar": "تواصل",
+      "en": "Contact"
+    },
+    "privacy": {
+      "ar": "الخصوصية",
+      "en": "Privacy"
+    },
+    "terms": {
+      "ar": "الشروط",
+      "en": "Terms"
+    },
+    "rights": {
+      "ar": "جميع الحقوق محفوظة.",
+      "en": "All rights reserved."
+    }
+  }
+}
