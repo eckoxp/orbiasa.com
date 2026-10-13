@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import ScrollReveal from './anim/ScrollReveal';
 
 const Photos = () => {
@@ -13,6 +13,11 @@ const Photos = () => {
     portraits: 4,
     products: 4,
   });
+  const [lightbox, setLightbox] = useState<{
+    images: string[];
+    index: number;
+    title: string;
+  } | null>(null);
 
   const categories = [
     { 
@@ -103,6 +108,35 @@ const Photos = () => {
     fetch('/api/photos').then(r => r.json()).then(setDbPhotos).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (!lightbox) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setLightbox(null);
+      } else if (event.key === 'ArrowLeft') {
+        setLightbox((current) => current
+          ? { ...current, index: (current.index - 1 + current.images.length) % current.images.length }
+          : null
+        );
+      } else if (event.key === 'ArrowRight') {
+        setLightbox((current) => current
+          ? { ...current, index: (current.index + 1) % current.images.length }
+          : null
+        );
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [lightbox]);
+
   const mergedImages = (key: keyof typeof sampleImages): string[] => {
     const filtered = dbPhotos.filter((p) => p.category === key);
     if (filtered.length) {
@@ -151,7 +185,13 @@ const Photos = () => {
         <div className="relative left-1/2 right-1/2 w-screen -ml-[50vw] -mr-[50vw] max-w-none">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 px-4 sm:px-6 lg:px-8">
             {displayedImages.map((src, imageIndex) => (
-              <div key={imageIndex} className="group">
+              <button
+                key={imageIndex}
+                type="button"
+                className="group block w-full cursor-zoom-in text-left"
+                onClick={() => setLightbox({ images, index: imageIndex, title })}
+                aria-label={isRTL ? `فتح الصورة ${imageIndex + 1}` : `Open image ${imageIndex + 1}`}
+              >
                 <div className="relative">
                   {/* Enhanced Photo Card - matching Movies design */}
                   <div className="relative aspect-video rounded-3xl overflow-hidden bg-white shadow-lg hover:shadow-3xl transition-all duration-700 transform hover:-translate-y-2 hover:scale-[1.02] border border-gray-100">
@@ -171,7 +211,7 @@ const Photos = () => {
                     <div className="absolute bottom-6 right-6 w-1 h-1 bg-orbia-pink/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                   </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -193,7 +233,8 @@ const Photos = () => {
   };
 
   return (
-    <section id="photos" className="min-h-screen relative z-10 overflow-hidden" style={{ backgroundImage: 'url(/backgrounds/newbg.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
+    <>
+      <section id="photos" className="min-h-screen relative z-10 overflow-hidden" style={{ backgroundImage: 'url(/backgrounds/newbg.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
       {/* Black overlay effect */}
       <div className="absolute inset-0 bg-black/50 z-5" />
 
@@ -226,7 +267,71 @@ const Photos = () => {
       <style jsx>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
       `}</style>
-    </section>
+      </section>
+
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 sm:p-8"
+          role="dialog"
+          aria-modal="true"
+          aria-label={lightbox.title}
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            type="button"
+            className="absolute right-4 top-4 z-20 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20 sm:right-8 sm:top-8"
+            onClick={() => setLightbox(null)}
+            aria-label={isRTL ? 'إغلاق المعاينة' : 'Close preview'}
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          <button
+            type="button"
+            className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white transition-all hover:bg-orbia-pink sm:left-8 sm:p-4"
+            onClick={(event) => {
+              event.stopPropagation();
+              setLightbox((current) => current
+                ? { ...current, index: (current.index - 1 + current.images.length) % current.images.length }
+                : null
+              );
+            }}
+            aria-label={isRTL ? 'الصورة السابقة' : 'Previous image'}
+          >
+            <ChevronLeft className="h-7 w-7" />
+          </button>
+
+          <div
+            className="flex max-h-[90vh] max-w-[90vw] flex-col items-center gap-4"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <img
+              src={lightbox.images[lightbox.index]}
+              alt={`${lightbox.title} ${lightbox.index + 1}`}
+              className="max-h-[82vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl"
+            />
+            <div className={`text-sm text-white/80 ${isRTL ? 'font-arabic' : 'font-english'}`}>
+              {lightbox.index + 1} / {lightbox.images.length}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white transition-all hover:bg-orbia-pink sm:right-8 sm:p-4"
+            onClick={(event) => {
+              event.stopPropagation();
+              setLightbox((current) => current
+                ? { ...current, index: (current.index + 1) % current.images.length }
+                : null
+              );
+            }}
+            aria-label={isRTL ? 'الصورة التالية' : 'Next image'}
+          >
+            <ChevronRight className="h-7 w-7" />
+          </button>
+        </div>
+      )}
+    </>
   );
 };
 
