@@ -274,11 +274,16 @@ const Movies = () => {
   type DbVideo = { id: string; category: string; title_ar: string; title_en: string; video_url: string; thumbnail_url?: string };
   type VideoItem = { id: string | number; title: string; duration: string; thumbnail: string; customThumbnail?: string; video_url?: string };
   const [dbVideos, setDbVideos] = useState<DbVideo[]>([]);
+  const [videosLoaded, setVideosLoaded] = useState(false);
   const [player, setPlayer] = useState<{ open: boolean; url: string; title: string }>(() => ({ open: false, url: '', title: '' }));
   const [preloadedVideos, setPreloadedVideos] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch('/api/movies').then(r => r.json()).then(setDbVideos).catch(() => {});
+    fetch('/api/movies')
+      .then(r => r.json())
+      .then(data => setDbVideos(Array.isArray(data) ? data : []))
+      .catch(() => setDbVideos([]))
+      .finally(() => setVideosLoaded(true));
   }, []);
 
   // Preload video metadata for faster playback
@@ -342,17 +347,14 @@ const Movies = () => {
 
   const mergedVideos = (key: keyof typeof sampleVideos): VideoItem[] => {
     const filtered = dbVideos.filter((v) => v.category === key);
-    if (filtered.length) {
-      return filtered.map((v, idx: number) => ({ 
-        id: v.id ?? idx, 
-        title: isRTL ? v.title_ar : v.title_en, 
-        duration: '', 
-        thumbnail: v.thumbnail_url || getVideoThumbnail(v.video_url),
-        customThumbnail: v.thumbnail_url,
-        video_url: v.video_url || ''
-      }));
-    }
-    return sampleVideos[key].map(v => ({ ...v, video_url: undefined }));
+    return filtered.map((v, idx: number) => ({
+      id: v.id ?? idx,
+      title: isRTL ? v.title_ar : v.title_en,
+      duration: '',
+      thumbnail: v.thumbnail_url || getVideoThumbnail(v.video_url),
+      customThumbnail: v.thumbnail_url,
+      video_url: v.video_url || ''
+    }));
   };
 
   const toPlayableUrl = (raw: string): string => {
@@ -392,12 +394,18 @@ const Movies = () => {
   };
 
   const handleLoadMore = (key: keyof typeof sampleVideos) => {
-    const total = sampleVideos[key].length;
+    const total = dbVideos.filter((video) => video.category === key).length;
     setVisibleCounts((prev) => {
       const current = prev[key as string] ?? 4;
       return { ...prev, [key]: Math.min(total, current + 4) };
     });
   };
+
+  const activeCategories = categories.filter((category) =>
+    dbVideos.some((video) => video.category === category.key)
+  );
+
+  if (!videosLoaded || activeCategories.length === 0) return null;
 
   return (
     <section ref={moviesRef} id="movies" className="relative z-10 bg-white overflow-hidden">
@@ -410,7 +418,7 @@ const Movies = () => {
           </h2>
         </div>
 
-        {(categories as typeof categories).map((category, categoryIndex) => {
+        {activeCategories.map((category, categoryIndex) => {
           const key = category.key as keyof typeof sampleVideos;
           const videos = mergedVideos(key);
           const visible = visibleCounts[key as string] ?? 4;

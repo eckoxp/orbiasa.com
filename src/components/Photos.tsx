@@ -104,8 +104,13 @@ const Photos = () => {
 
   type DbPhoto = { id: string; category: string; image_url: string };
   const [dbPhotos, setDbPhotos] = useState<DbPhoto[]>([]);
+  const [photosLoaded, setPhotosLoaded] = useState(false);
   useEffect(() => {
-    fetch('/api/photos').then(r => r.json()).then(setDbPhotos).catch(() => {});
+    fetch('/api/photos')
+      .then(r => r.json())
+      .then(data => setDbPhotos(Array.isArray(data) ? data : []))
+      .catch(() => setDbPhotos([]))
+      .finally(() => setPhotosLoaded(true));
   }, []);
 
   useEffect(() => {
@@ -139,19 +144,20 @@ const Photos = () => {
 
   const mergedImages = (key: keyof typeof sampleImages): string[] => {
     const filtered = dbPhotos.filter((p) => p.category === key);
-    if (filtered.length) {
-      return filtered.map((p) => p.image_url);
-    }
-    return sampleImages[key];
+    return filtered.map((p) => p.image_url);
   };
 
   const handleLoadMore = (key: keyof typeof sampleImages) => {
-    const total = sampleImages[key].length;
+    const total = dbPhotos.filter((photo) => photo.category === key).length;
     setVisibleCounts((prev) => {
       const current = prev[key as string] ?? 4;
       return { ...prev, [key]: Math.min(total, current + 4) };
     });
   };
+
+  const activeCategories = categories.filter((category) =>
+    dbPhotos.some((photo) => photo.category === category.key)
+  );
 
   // Enhanced Grid for one photo category - matching Movies section design
   const CategoryGrid: React.FC<{
@@ -232,6 +238,8 @@ const Photos = () => {
     );
   };
 
+  if (!photosLoaded || activeCategories.length === 0) return null;
+
   return (
     <>
       <section id="photos" className="min-h-screen relative z-10 overflow-hidden" style={{ backgroundImage: 'url(/backgrounds/newbg.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
@@ -248,7 +256,7 @@ const Photos = () => {
           </ScrollReveal>
         </div>
 
-        {categories.map((category, index) => {
+        {activeCategories.map((category, index) => {
           const key = category.key as keyof typeof sampleImages;
           const images = mergedImages(key);
           return (
