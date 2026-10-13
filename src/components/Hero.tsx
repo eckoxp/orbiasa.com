@@ -68,7 +68,7 @@ const Hero = () => {
             
             
             {/* Description with Slide-in Animation (Left to Right) */}
-            <p className={`reveal-soft text-lg md:text-xl text-white/90 mb-12 leading-relaxed max-w-3xl ${isRTL ? 'font-arabic text-right ml-auto' : 'font-english text-left mr-auto'} ${isHeroVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.1s' }}>
+            <p className={`reveal-soft text-lg md:text-xl text-white/90 mb-12 leading-relaxed max-w-3xl ${isRTL ? 'font-arabic' : 'font-english'} ${isHeroVisible ? 'reveal-soft-visible' : ''}`} style={{ transitionDelay: '0.1s' }}>
               {descriptionText}
             </p>
             

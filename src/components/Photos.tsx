@@ -134,7 +134,7 @@ const Photos = () => {
       <div className="mb-32">
         {/* Enhanced Category Header - matching Movies layout */}
         <div className={`${isRTL ? 'text-right' : 'text-left'} mb-12`}>
-          <div className={`flex items-baseline gap-3 sm:gap-4 md:gap-6 flex-wrap sm:flex-nowrap ${isRTL ? 'justify-end text-right' : 'justify-start text-left'}`}>
+          <div className={`flex items-baseline justify-center gap-3 sm:gap-4 md:gap-6 flex-wrap sm:flex-nowrap`}>
             <span className="shrink-0 text-white">
               {isRTL ? <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" /> : <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />}
             </span>
