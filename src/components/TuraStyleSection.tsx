@@ -45,8 +45,8 @@ function ExpertiseIcon({ className }: { className?: string }) {
 const TuraStyleSection = () => {
   const { t, isRTL } = useLanguage();
   const { ref: sectionRef, isVisible: isSectionVisible } = useScrollAnimation({
-    threshold: 0.03,
-    rootMargin: '0px 0px 140px 0px'
+    threshold: 0.12,
+    rootMargin: '0px 0px -12% 0px'
   });
 
   return (

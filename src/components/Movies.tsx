@@ -198,8 +198,8 @@ const VideoThumbnail: React.FC<{
 const Movies = () => {
   const { t, isRTL } = useLanguage();
   const { ref: moviesRef, isVisible: isMoviesVisible } = useScrollAnimation({
-    threshold: 0.03,
-    rootMargin: '0px 0px 140px 0px'
+    threshold: 0.12,
+    rootMargin: '0px 0px -12% 0px'
   });
   const [visibleCounts, setVisibleCounts] = useState<{ [key: string]: number }>({
     advertisements: 4,

@@ -211,14 +211,15 @@ const Photos = () => {
           const key = category.key as keyof typeof sampleImages;
           const images = mergedImages(key);
           return (
-            <CategoryGrid
-              key={category.key}
-              title={category.title}
-              description={t(`photos.${category.key}.description`)}
-              images={images}
-              categoryIndex={index}
-              categoryKey={category.key}
-            />
+            <ScrollReveal key={category.key} y={28} durationMs={600}>
+              <CategoryGrid
+                title={category.title}
+                description={t(`photos.${category.key}.description`)}
+                images={images}
+                categoryIndex={index}
+                categoryKey={category.key}
+              />
+            </ScrollReveal>
           );
         })}
       </div>

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Send } from 'lucide-react';
+import ScrollReveal from './anim/ScrollReveal';
 
 const ContactUs = () => {
   const { t, isRTL } = useLanguage();
@@ -34,15 +35,15 @@ const ContactUs = () => {
       <div className="absolute inset-0 bg-[url('/backgrounds/contact-us.jpg')] bg-cover bg-center bg-no-repeat" />
       <div className="absolute inset-0 bg-black/70" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-orbia-pink mb-4 font-arabic">
-            {t('contact.title')}
-          </h2>
-        </div>
+        <ScrollReveal y={30} durationMs={650}>
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-orbia-pink mb-4 font-arabic">
+              {t('contact.title')}
+            </h2>
+          </div>
 
-        <div className="max-w-3xl mx-auto">
-          {/* Contact Form */}
-          <div>
+          <div className="max-w-3xl mx-auto">
+            {/* Contact Form */}
             <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-white/10 bg-black/40 backdrop-blur-sm p-6 md:p-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -152,7 +153,7 @@ const ContactUs = () => {
               </button>
             </form>
           </div>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );
