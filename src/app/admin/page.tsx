@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { MovieCategory, PhotoCategory, MovieRow, PhotoRow } from '@/lib/db';
+import type { MovieCategory, PhotoCategory, MovieRow, PhotoRow } from '@/lib/db';
 import { Plus, Edit, Trash2, Film, Image, Save, X, Upload, LogOut, Globe } from 'lucide-react';
 
 interface CategoryData {
@@ -18,6 +18,7 @@ const AdminPage: React.FC = () => {
   const [photos, setPhotos] = useState<PhotoRow[]>([]);
   const [movieCats, setMovieCats] = useState<CategoryData[]>([]);
   const [photoCats, setPhotoCats] = useState<CategoryData[]>([]);
+  const [loadError, setLoadError] = useState('');
   
   // Modal states
   const [showMovieModal, setShowMovieModal] = useState(false);
@@ -58,17 +59,32 @@ const AdminPage: React.FC = () => {
 
   const refresh = async () => {
     try {
-    const [m, p, c] = await Promise.all([
-        fetch('/api/admin/movies').then(r => r.json()).catch(() => []),
-        fetch('/api/admin/photos').then(r => r.json()).catch(() => []),
-        fetch('/api/admin/categories').then(r => r.json()).catch(() => ({ movies: [], photos: [] })),
-    ]);
-    setMovies(m || []);
-    setPhotos(p || []);
-    setMovieCats(c.movies || []);
-    setPhotoCats(c.photos || []);
-    } catch {
-      console.error('Error refreshing data');
+      const responses = await Promise.all([
+        fetch('/api/admin/movies'),
+        fetch('/api/admin/photos'),
+        fetch('/api/admin/categories'),
+      ]);
+      const [m, p, c] = await Promise.all(responses.map(response => response.json().catch(() => null)));
+
+      setMovies(Array.isArray(m) ? m : []);
+      setPhotos(Array.isArray(p) ? p : []);
+      setMovieCats(Array.isArray(c?.movies) ? c.movies : []);
+      setPhotoCats(Array.isArray(c?.photos) ? c.photos : []);
+
+      if (responses.some(response => !response.ok)) {
+        setLoadError(isRTL
+          ? 'تعذر تحميل المحتوى. تأكد من إضافة DATABASE_URL في إعدادات Vercel.'
+          : 'Content could not be loaded. Make sure DATABASE_URL is configured in Vercel.');
+      } else {
+        setLoadError('');
+      }
+    } catch (error) {
+      console.error('Error refreshing data', error);
+      setMovies([]);
+      setPhotos([]);
+      setMovieCats([]);
+      setPhotoCats([]);
+      setLoadError(isRTL ? 'حدث خطأ أثناء تحميل المحتوى.' : 'An error occurred while loading content.');
     }
   };
 
@@ -214,6 +230,13 @@ const AdminPage: React.FC = () => {
     <div className={`min-h-screen bg-black text-white relative ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'} style={{background: '#000000'}}>
       {/* Override global background */}
       <div className="fixed inset-0 bg-black z-[-1]" />
+      {loadError && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-200">
+            {loadError}
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="border-b border-gray-800 bg-black backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
