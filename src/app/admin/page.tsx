@@ -73,8 +73,8 @@ const AdminPage: React.FC = () => {
 
       if (responses.some(response => !response.ok)) {
         setLoadError(isRTL
-          ? 'تعذر تحميل المحتوى. تأكد من إضافة DATABASE_URL في إعدادات Vercel.'
-          : 'Content could not be loaded. Make sure DATABASE_URL is configured in Vercel.');
+          ? 'تعذر تحميل المحتوى. تأكد من اتصال قاعدة البيانات في إعدادات Vercel.'
+          : 'Content could not be loaded. Make sure the database is connected in Vercel.');
       } else {
         setLoadError('');
       }

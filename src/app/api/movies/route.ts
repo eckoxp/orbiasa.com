@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { databaseUrl, sql } from '@/lib/db';
 
 export async function GET() {
-  if (!process.env.DATABASE_URL) {
+  if (!databaseUrl) {
     // Return empty list when DB is not configured so the UI can fall back to sample data
     return NextResponse.json([]);
   }

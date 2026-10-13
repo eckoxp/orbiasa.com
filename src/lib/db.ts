@@ -28,11 +28,13 @@ export interface PhotoRow {
 
 type SqlTagged = ReturnType<typeof neon>;
 
+export const databaseUrl = process.env.DATABASE_URL || process.env.DATABASE_POSTGRES_URL;
+
 // Avoid initializing a connection during static builds when env isn't present.
-export const sql: SqlTagged = (process.env.DATABASE_URL
-  ? neon(process.env.DATABASE_URL as string)
+export const sql: SqlTagged = (databaseUrl
+  ? neon(databaseUrl)
   : (((() => {
-      throw new Error('DATABASE_URL env var is not set');
+      throw new Error('Database connection URL is not set');
     }) as unknown) as SqlTagged));
 
 export async function ensureTables(): Promise<void> {
