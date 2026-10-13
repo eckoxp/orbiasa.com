@@ -13,9 +13,6 @@ const OurPartners = () => {
     return { name: `Partner ${id}`, logo: `/partners/${id}.png` };
   }).filter((_, index) => index !== 8); // Remove 09.png (index 8)
 
-  const subtitle = t('partners.subtitle');
-  const showSubtitle = Boolean(subtitle) && subtitle !== 'partners.subtitle';
-
   return (
     <section 
       id="our-partners" 
@@ -42,20 +39,23 @@ const OurPartners = () => {
           </p>
         </ScrollReveal>
 
-        {/* Simple Partners Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 pb-16">
-          {partners.map((partner, index) => (
-            <ScrollReveal key={index} delayMs={index * 100} className="group">
-              <div className="flex items-center justify-center p-4">
+        {/* Reveal the complete logo grid together for a smooth, unified entrance. */}
+        <ScrollReveal y={16} durationMs={520}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 pb-16">
+            {partners.map((partner) => (
+              <div
+                key={partner.name}
+                className="group flex items-center justify-center p-4"
+              >
                 <img
                   src={partner.logo}
                   alt={partner.name}
-                  className="max-h-16 md:max-h-20 w-auto object-contain"
+                  className="max-h-16 md:max-h-20 w-auto object-contain transition-transform duration-300 ease-out group-hover:scale-105"
                 />
               </div>
-            </ScrollReveal>
-          ))}
-        </div>
+            ))}
+          </div>
+        </ScrollReveal>
       </div>
       
       {/* Bottom Spacing */}
