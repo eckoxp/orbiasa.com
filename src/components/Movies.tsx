@@ -26,6 +26,18 @@ const getYouTubeVideoId = (rawUrl: string): string | null => {
   return null;
 };
 
+const getGoogleDriveFileId = (rawUrl: string): string | null => {
+  try {
+    const url = new URL(rawUrl);
+    if (url.hostname !== 'drive.google.com') return null;
+
+    const fileMatch = url.pathname.match(/\/file\/d\/([^/]+)/);
+    return fileMatch?.[1] || url.searchParams.get('id');
+  } catch {
+    return null;
+  }
+};
+
 // Component to show video thumbnails with hybrid approach
 const VideoThumbnail: React.FC<{ 
   videoUrl: string; 
@@ -272,7 +284,7 @@ const Movies = () => {
   // Preload video metadata for faster playback
   const preloadVideo = (videoUrl: string) => {
     if (preloadedVideos.has(videoUrl)) return;
-    if (getYouTubeVideoId(videoUrl) || videoUrl.includes('vimeo.com')) return;
+    if (getYouTubeVideoId(videoUrl) || getGoogleDriveFileId(videoUrl) || videoUrl.includes('vimeo.com')) return;
 
     const video = document.createElement('video');
     video.preload = 'metadata';
@@ -299,6 +311,9 @@ const Movies = () => {
     // For YouTube videos
     const youtubeId = getYouTubeVideoId(videoUrl);
     if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+
+    const driveFileId = getGoogleDriveFileId(videoUrl);
+    if (driveFileId) return `https://drive.google.com/thumbnail?id=${driveFileId}&sz=w1000`;
     
     // For Vimeo videos
     if (videoUrl.includes('vimeo.com')) {
@@ -513,6 +528,14 @@ const Movies = () => {
                   title={player.title}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              ) : getGoogleDriveFileId(player.url) ? (
+                <iframe
+                  className="w-full h-full"
+                  src={`https://drive.google.com/file/d/${getGoogleDriveFileId(player.url)}/preview`}
+                  title={player.title}
+                  allow="autoplay; fullscreen"
                   allowFullScreen
                 />
               ) : (
