@@ -31,7 +31,7 @@ const OurPartners = () => {
             {t('partners.title')}
           </h2>
           
-          <p className={`text-justify text-lg md:text-xl text-white max-w-3xl leading-relaxed ${isRTL ? 'font-arabic ml-auto' : 'font-english'}`}>
+          <p className={`text-justify text-lg md:text-xl text-white max-w-3xl leading-relaxed ${isRTL ? 'font-arabic ml-auto [text-align-last:right]' : 'font-english [text-align-last:left]'}`}>
             {isRTL 
               ? 'نفتخر بشراكتنا مع أبرز العلامات التجارية والمؤسسات الرائدة في مجال الإنتاج المرئي والإبداعي'
               : 'We are proud to partner with leading brands and institutions in the field of visual and creative production'

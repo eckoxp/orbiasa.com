@@ -425,7 +425,7 @@ const Movies = () => {
                   <h3 className={`shrink-0 text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 ${isRTL ? 'font-arabic' : 'font-english'}`}>
                     {isRTL ? category.title.ar : category.title.en}
                   </h3>
-                  <p className={`text-justify text-[13px] sm:text-sm md:text-sm lg:text-base text-gray-600 leading-relaxed ${isRTL ? 'font-arabic' : 'font-english'} max-w-[42ch] sm:max-w-[48ch] lg:max-w-[52ch]`}>
+                  <p className={`text-justify text-[13px] sm:text-sm md:text-sm lg:text-base text-gray-600 leading-relaxed ${isRTL ? 'font-arabic [text-align-last:right]' : 'font-english [text-align-last:left]'} max-w-[42ch] sm:max-w-[48ch] lg:max-w-[52ch]`}>
                     {isRTL ? category.description.ar : category.description.en}
                   </p>
               </div>
