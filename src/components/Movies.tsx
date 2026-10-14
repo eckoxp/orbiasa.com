@@ -38,6 +38,19 @@ const getGoogleDriveFileId = (rawUrl: string): string | null => {
   }
 };
 
+const getPlayableVideoUrl = (rawUrl: string): string => {
+  if (!rawUrl || !/dropbox\.com/.test(rawUrl)) return rawUrl;
+
+  try {
+    const url = new URL(rawUrl);
+    url.searchParams.delete('dl');
+    url.searchParams.set('raw', '1');
+    return url.toString();
+  } catch {
+    return rawUrl;
+  }
+};
+
 // Component to show video thumbnails with hybrid approach
 const VideoThumbnail: React.FC<{ 
   videoUrl: string; 
@@ -48,132 +61,67 @@ const VideoThumbnail: React.FC<{
 }> = ({ videoUrl, title, fallbackThumbnail, customThumbnail, onThumbnailGenerated }) => {
   const [thumbnail, setThumbnail] = useState(customThumbnail || fallbackThumbnail);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [hasGenerated, setHasGenerated] = useState(false);
-  const [attemptClientSide, setAttemptClientSide] = useState(false);
+  const [videoPreviewFailed, setVideoPreviewFailed] = useState(false);
+  const youtubeId = getYouTubeVideoId(videoUrl);
+  const driveFileId = getGoogleDriveFileId(videoUrl);
+  const isVimeo = videoUrl.includes('vimeo.com');
+  const canUseVideoFrame = Boolean(videoUrl && !youtubeId && !driveFileId && !isVimeo);
 
-  // Use custom thumbnail if available, otherwise try server-side generation
+  // Uploaded thumbnails take priority. For direct video files, the browser
+  // displays a paused frame from the video itself below.
   useEffect(() => {
-    if (customThumbnail) {
-      setThumbnail(customThumbnail);
-      setHasGenerated(true);
-      console.log('✅ Using custom uploaded thumbnail:', customThumbnail);
-      return;
-    }
-    
-    if (!videoUrl.includes('dropbox.com') || hasGenerated) {
-      return;
-    }
+    setThumbnail(customThumbnail || fallbackThumbnail);
+    setVideoPreviewFailed(false);
+  }, [customThumbnail, fallbackThumbnail, videoUrl]);
 
-    setIsGenerating(true);
-
-    const generateServerThumbnail = async () => {
-      try {
-        console.log('Requesting server-side thumbnail generation...');
-        
-        const response = await fetch('/api/generate-thumbnail', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ videoUrl }),
-        });
-
-        const result = await response.json();
-        
-        if (result.success && result.thumbnailUrl && !result.isRealThumbnail) {
-          console.log('Server contextual thumbnail generated:', result.thumbnailUrl);
-          setThumbnail(result.thumbnailUrl);
-          // Don't set hasGenerated=true yet, we want to try client-side extraction
-          
-          // Try client-side as backup for real thumbnail
-          setAttemptClientSide(true);
-          
-          if (onThumbnailGenerated) {
-            onThumbnailGenerated(result.thumbnailUrl);
-          }
-        } else if (result.success && result.isRealThumbnail) {
-          console.log('Real server thumbnail generated:', result.thumbnailUrl);
-          setThumbnail(result.thumbnailUrl);
-          setHasGenerated(true);
-          
-          if (onThumbnailGenerated) {
-            onThumbnailGenerated(result.thumbnailUrl);
-          }
-        } else {
-          console.log('Server thumbnail generation failed, trying client-side');
-          setAttemptClientSide(true);
-        }
-      } catch (error) {
-        console.log('Server thumbnail request failed, trying client-side:', error);
-        setAttemptClientSide(true);
-      } finally {
-        setIsGenerating(false);
-      }
-    };
-
-    const timeout = setTimeout(generateServerThumbnail, 500);
-    return () => clearTimeout(timeout);
-  }, [videoUrl, hasGenerated, onThumbnailGenerated, customThumbnail]);
-
-  // Try enhanced server-side extraction as backup
+  // Vimeo exposes the real video thumbnail through its public oEmbed endpoint.
   useEffect(() => {
-    if (!attemptClientSide || hasGenerated) {
-      return;
-    }
+    if (customThumbnail || !isVimeo) return;
 
-    console.log('Attempting enhanced server-side frame extraction...');
+    let cancelled = false;
     setIsGenerating(true);
-
-    const extractFrame = async () => {
-      try {
-        const response = await fetch('/api/extract-frame', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            videoUrl,
-            seekTime: 3 
-          }),
-        });
-
-        const result = await response.json();
-        
-        if (result.success && result.thumbnailUrl) {
-          console.log('✅ Enhanced server-side thumbnail generated:', result.method);
-          setThumbnail(result.thumbnailUrl);
-          setHasGenerated(true);
-          
-          if (onThumbnailGenerated) {
-            onThumbnailGenerated(result.thumbnailUrl);
-          }
-          
-          console.log('Video info:', result.videoInfo);
-        } else {
-          console.log('Enhanced server extraction failed:', result.error);
-          setHasGenerated(true);
+    fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(videoUrl)}`)
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((data) => {
+        if (!cancelled && data.thumbnail_url) {
+          setThumbnail(data.thumbnail_url);
+          onThumbnailGenerated?.(data.thumbnail_url);
         }
-      } catch (error) {
-        console.log('Enhanced server extraction request failed:', error);
-        setHasGenerated(true);
-      } finally {
-        setIsGenerating(false);
-      }
-    };
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setIsGenerating(false);
+      });
 
-    // Small delay to avoid blocking UI
-    const timeout = setTimeout(extractFrame, 1000);
-    
-    return () => clearTimeout(timeout);
-  }, [attemptClientSide, hasGenerated, onThumbnailGenerated, videoUrl]);
+    return () => { cancelled = true; };
+  }, [customThumbnail, isVimeo, onThumbnailGenerated, videoUrl]);
 
   return (
     <div className="relative w-full h-full">
-      <img 
-        src={thumbnail} 
-        alt={title}
-        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-      />
+      {!customThumbnail && canUseVideoFrame && !videoPreviewFailed ? (
+        <video
+          src={getPlayableVideoUrl(videoUrl)}
+          aria-label={title}
+          muted
+          playsInline
+          preload="metadata"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          onLoadedMetadata={(event) => {
+            const video = event.currentTarget;
+            video.currentTime = Number.isFinite(video.duration)
+              ? Math.min(2, Math.max(0.1, video.duration * 0.1))
+              : 0.1;
+          }}
+          onSeeked={(event) => event.currentTarget.pause()}
+          onError={() => setVideoPreviewFailed(true)}
+        />
+      ) : (
+        <img
+          src={thumbnail}
+          alt={title}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        />
+      )}
       
       
       {/* Loading state overlay */}
