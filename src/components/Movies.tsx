@@ -361,20 +361,13 @@ const Movies = () => {
     console.log('Processing video URL:', raw);
     
     if (/dropbox\.com/.test(raw)) {
-      // Try direct Dropbox URLs first, fallback to proxy if needed
-      let processedUrl = raw
-        .replace('?dl=0', '?dl=1')
-        .replace('&dl=0', '&dl=1')
-        .replace('?raw=0', '?raw=1')
-        .replace('&raw=0', '&raw=1');
-      
-      if (!processedUrl.includes('dl=1') && !processedUrl.includes('raw=1')) {
-        const separator = processedUrl.includes('?') ? '&' : '?';
-        processedUrl = processedUrl + separator + 'raw=1';
-      }
-      
-      console.log('Using direct Dropbox URL:', processedUrl);
-      return processedUrl;
+      // Dropbox share links must use raw=1 for inline HTML5 video playback.
+      const processedUrl = new URL(raw);
+      processedUrl.searchParams.delete('dl');
+      processedUrl.searchParams.set('raw', '1');
+
+      console.log('Using direct Dropbox URL:', processedUrl.toString());
+      return processedUrl.toString();
     }
     
     // Handle YouTube URLs
@@ -581,9 +574,7 @@ const Movies = () => {
                   // Try fallback URLs for Dropbox videos
                   if (originalUrl.includes('dropbox.com') && !video.src.includes('raw=1')) {
                     console.log('Trying fallback with raw=1 parameter');
-                    const fallbackUrl = originalUrl.includes('?') 
-                      ? originalUrl.replace('dl=1', 'raw=1') 
-                      : originalUrl + '?raw=1';
+                    const fallbackUrl = toPlayableUrl(originalUrl);
                     
                     video.src = fallbackUrl;
                     video.load();
