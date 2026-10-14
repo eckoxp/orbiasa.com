@@ -398,7 +398,9 @@ const Movies = () => {
     dbVideos.some((video) => video.category === category.key)
   );
 
-  if (!videosLoaded || activeCategories.length === 0) return null;
+  // Keep the section mounted while the API request is loading so the scroll
+  // observer can attach to it. Once loading finishes, hide it only if empty.
+  if (videosLoaded && activeCategories.length === 0) return null;
 
   return (
     <section ref={moviesRef} id="movies" className="relative z-10 bg-white overflow-hidden">
