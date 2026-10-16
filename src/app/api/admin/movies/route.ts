@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { sql, MovieCategory, ensureTables } from '@/lib/db';
-import { put } from '@vercel/blob';
 
 export async function POST(req: Request) {
   const form = await req.formData();
@@ -9,29 +8,14 @@ export async function POST(req: Request) {
   const title_ar = String(form.get('title_ar') || '');
   const title_en = String(form.get('title_en') || '');
   const video_url = String(form.get('video_url') || '');
-  const thumbnailFile = form.get('thumbnail') as File | null;
+  const uploadedThumbnailUrl = String(form.get('thumbnail_url') || '');
+  const thumbnail_url = uploadedThumbnailUrl || null;
   
   if (!category || !title_ar || !title_en || !video_url) {
     return NextResponse.json({ ok: false, error: 'Missing fields' }, { status: 400 });
   }
   
   try {
-    let thumbnail_url: string | null = null;
-    
-    // Handle thumbnail upload if provided
-    if (thumbnailFile && thumbnailFile.size > 0) {
-      const timestamp = Date.now();
-      const filename = `movie-thumbnail-${timestamp}-${thumbnailFile.name}`;
-      
-      const blob = await put(filename, thumbnailFile, {
-        access: 'public',
-        contentType: thumbnailFile.type,
-      });
-      
-      thumbnail_url = blob.url;
-      console.log('Thumbnail uploaded:', thumbnail_url);
-    }
-    
     if (id) {
       // Update existing movie
       if (thumbnail_url) {
@@ -61,20 +45,8 @@ export async function POST(req: Request) {
         console.log('Running database migration to add thumbnail_url column...');
         await ensureTables();
         
-        // Retry the operation after migration
-        // Re-process thumbnail upload if needed
-        let retryThumbnailUrl: string | null = null;
-        if (thumbnailFile && thumbnailFile.size > 0) {
-          const timestamp = Date.now();
-          const filename = `movie-thumbnail-${timestamp}-${thumbnailFile.name}`;
-          
-          const blob = await put(filename, thumbnailFile, {
-            access: 'public',
-            contentType: thumbnailFile.type,
-          });
-          
-          retryThumbnailUrl = blob.url;
-        }
+        // Retry the database operation after migration. The file is already in R2.
+        const retryThumbnailUrl = thumbnail_url;
         
         if (id) {
           // Update existing movie

@@ -4,13 +4,48 @@ import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { MovieCategory, PhotoCategory, MovieRow, PhotoRow } from '@/lib/db';
 import { Plus, Edit, Trash2, Film, Image, Save, X, Upload, LogOut, Globe } from 'lucide-react';
-import { upload } from '@vercel/blob/client';
 
 interface CategoryData {
   slug: string;
   name_ar: string;
   name_en: string;
 }
+
+const uploadFileToR2 = async (
+  file: File,
+  folder: 'movies' | 'movie-thumbnails' | 'photos',
+  onProgress?: (percentage: number) => void,
+): Promise<string> => {
+  const prepareResponse = await fetch('/api/admin/r2-upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      folder,
+      fileName: file.name,
+      contentType: file.type,
+      fileSize: file.size,
+    }),
+  });
+  const prepared = await prepareResponse.json();
+  if (!prepareResponse.ok) throw new Error(prepared.error || 'Could not prepare upload');
+
+  await new Promise<void>((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open('PUT', prepared.uploadUrl);
+    request.setRequestHeader('Content-Type', file.type);
+    request.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress?.(Math.round((event.loaded / event.total) * 100));
+    };
+    request.onload = () => {
+      if (request.status >= 200 && request.status < 300) resolve();
+      else reject(new Error(`Upload failed (${request.status})`));
+    };
+    request.onerror = () => reject(new Error('Upload failed. Check the R2 CORS configuration.'));
+    request.send(file);
+  });
+
+  return prepared.publicUrl;
+};
 
 const AdminPage: React.FC = () => {
   const { isRTL, toggleLanguage } = useLanguage();
@@ -124,15 +159,7 @@ const AdminPage: React.FC = () => {
       let videoUrl = movie.video_url.trim();
 
       if (movieVideoFile) {
-        const safeName = movieVideoFile.name.replace(/[^a-zA-Z0-9._-]/g, '-');
-        const blob = await upload(`movies/${Date.now()}-${safeName}`, movieVideoFile, {
-          access: 'public',
-          handleUploadUrl: '/api/admin/video-upload',
-          multipart: true,
-          contentType: movieVideoFile.type,
-          onUploadProgress: ({ percentage }) => setVideoUploadProgress(Math.round(percentage)),
-        });
-        videoUrl = blob.url;
+        videoUrl = await uploadFileToR2(movieVideoFile, 'movies', setVideoUploadProgress);
       }
 
       if (!videoUrl) {
@@ -153,7 +180,8 @@ const AdminPage: React.FC = () => {
       const thumbnailInput = document.getElementById('movie-thumbnail') as HTMLInputElement;
       const thumbnailFile = (thumbnailInput as HTMLInputElement & { movieThumbnailFile?: File })?.movieThumbnailFile;
       if (thumbnailFile) {
-        fd.append('thumbnail', thumbnailFile);
+        const thumbnailUrl = await uploadFileToR2(thumbnailFile, 'movie-thumbnails');
+        fd.append('thumbnail_url', thumbnailUrl);
       }
       
       await call('/api/admin/movies', fd);
@@ -178,7 +206,10 @@ const AdminPage: React.FC = () => {
     fd.append('description_ar', photo.description_ar);
     fd.append('description_en', photo.description_en);
       
-    if (photo.file) fd.append('file', photo.file);
+    if (photo.file) {
+      const imageUrl = await uploadFileToR2(photo.file, 'photos');
+      fd.append('image_url', imageUrl);
+    }
       if (editingPhoto) fd.append('id', editingPhoto.id);
       
     await call('/api/admin/photos', fd);
