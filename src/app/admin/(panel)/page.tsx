@@ -1,776 +1,168 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useLanguage } from '@/contexts/LanguageContext';
-import type { MovieCategory, PhotoCategory, MovieRow, PhotoRow } from '@/lib/db';
-import { Plus, Edit, Trash2, Film, Image, Save, X, Upload } from 'lucide-react';
-import { upload } from '@vercel/blob/client';
+import type { MovieRow, PhotoRow } from '@/lib/db';
+import { Film, Image as ImageIcon, Mail } from 'lucide-react';
+import MovieThumb from '@/components/admin/MovieThumb';
+import { panelCls, chipCls } from '@/components/admin/ui';
 
-interface CategoryData {
+interface Category {
   slug: string;
   name_ar: string;
   name_en: string;
 }
 
-const AdminPage: React.FC = () => {
-  const { isRTL } = useLanguage();
-  const [busy, setBusy] = useState(false);
-  const [movies, setMovies] = useState<MovieRow[]>([]);
-  const [photos, setPhotos] = useState<PhotoRow[]>([]);
-  const [movieCats, setMovieCats] = useState<CategoryData[]>([]);
-  const [photoCats, setPhotoCats] = useState<CategoryData[]>([]);
-  const [loadError, setLoadError] = useState('');
-  
-  // Modal states
-  const [showMovieModal, setShowMovieModal] = useState(false);
-  const [showPhotoModal, setShowPhotoModal] = useState(false);
-  const [editingMovie, setEditingMovie] = useState<MovieRow | null>(null);
-  const [editingPhoto, setEditingPhoto] = useState<PhotoRow | null>(null);
-  const [movieVideoFile, setMovieVideoFile] = useState<File | null>(null);
-  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+interface Message {
+  id: number;
+  name: string;
+  company: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
 
-  const [movie, setMovie] = useState({
-    category: 'advertisements' as MovieCategory,
-    title_ar: '',
-    title_en: '',
-    video_url: ''
-  });
-  
-  const [photo, setPhoto] = useState({
-    category: 'coverage' as PhotoCategory,
-    title_ar: '',
-    title_en: '',
-    description_ar: '',
-    description_en: '',
-    file: null as File | null
-  });
-
-  const call = async (path: string, body: FormData) => {
-    setBusy(true);
-    try {
-      const res = await fetch(path, { method: 'POST', body });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Request failed');
-      return data;
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : 'Unknown error';
-      throw new Error(message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const refresh = async () => {
-    try {
-      const responses = await Promise.all([
-        fetch('/api/admin/movies'),
-        fetch('/api/admin/photos'),
-        fetch('/api/admin/categories'),
-      ]);
-      const [m, p, c] = await Promise.all(responses.map(response => response.json().catch(() => null)));
-
-      setMovies(Array.isArray(m) ? m : []);
-      setPhotos(Array.isArray(p) ? p : []);
-      setMovieCats(Array.isArray(c?.movies) ? c.movies : []);
-      setPhotoCats(Array.isArray(c?.photos) ? c.photos : []);
-
-      if (responses.some(response => !response.ok)) {
-        setLoadError(isRTL
-          ? 'تعذر تحميل المحتوى. تأكد من اتصال قاعدة البيانات في إعدادات Vercel.'
-          : 'Content could not be loaded. Make sure the database is connected in Vercel.');
-      } else {
-        setLoadError('');
-      }
-    } catch (error) {
-      console.error('Error refreshing data', error);
-      setMovies([]);
-      setPhotos([]);
-      setMovieCats([]);
-      setPhotoCats([]);
-      setLoadError(isRTL ? 'حدث خطأ أثناء تحميل المحتوى.' : 'An error occurred while loading content.');
-    }
-  };
-
-  useEffect(() => { refresh(); }, []);
-
-  const resetMovieForm = () => {
-    setMovie({
-      category: 'advertisements' as MovieCategory,
-      title_ar: '',
-      title_en: '',
-      video_url: ''
-    });
-    setMovieVideoFile(null);
-    setVideoUploadProgress(0);
-    setEditingMovie(null);
-  };
-
-  const resetPhotoForm = () => {
-    setPhoto({
-      category: 'coverage' as PhotoCategory,
-      title_ar: '',
-      title_en: '',
-      description_ar: '',
-      description_en: '',
-      file: null
-    });
-    setEditingPhoto(null);
-  };
-
-  const submitMovie = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      let videoUrl = movie.video_url.trim();
-
-      if (movieVideoFile) {
-        const safeName = movieVideoFile.name.replace(/[^a-zA-Z0-9._-]/g, '-');
-        const blob = await upload(`movies/${Date.now()}-${safeName}`, movieVideoFile, {
-          access: 'public',
-          handleUploadUrl: '/api/admin/video-upload',
-          multipart: true,
-          contentType: movieVideoFile.type,
-          onUploadProgress: ({ percentage }) => setVideoUploadProgress(Math.round(percentage)),
-        });
-        videoUrl = blob.url;
-      }
-
-      if (!videoUrl) {
-        throw new Error(isRTL ? 'أدخل رابط فيديو أو اختر ملف فيديو لرفعه.' : 'Enter a video URL or choose a video file to upload.');
-      }
-
-      const fd = new FormData();
-      fd.append('category', movie.category);
-      fd.append('title_ar', movie.title_ar);
-      fd.append('title_en', movie.title_en);
-      fd.append('video_url', videoUrl);
-      
-      if (editingMovie) {
-        fd.append('id', editingMovie.id);
-      }
-      
-      // Add thumbnail file if selected
-      const thumbnailInput = document.getElementById('movie-thumbnail') as HTMLInputElement;
-      const thumbnailFile = (thumbnailInput as HTMLInputElement & { movieThumbnailFile?: File })?.movieThumbnailFile;
-      if (thumbnailFile) {
-        fd.append('thumbnail', thumbnailFile);
-      }
-      
-      await call('/api/admin/movies', fd);
-      await refresh();
-      setShowMovieModal(false);
-      resetMovieForm();
-      alert(editingMovie ? 'Movie updated successfully!' : 'Movie added successfully!');
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Error saving movie');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const submitPhoto = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-    const fd = new FormData();
-    fd.append('category', photo.category);
-    fd.append('title_ar', photo.title_ar);
-    fd.append('title_en', photo.title_en);
-    fd.append('description_ar', photo.description_ar);
-    fd.append('description_en', photo.description_en);
-      
-    if (photo.file) fd.append('file', photo.file);
-      if (editingPhoto) fd.append('id', editingPhoto.id);
-      
-    await call('/api/admin/photos', fd);
-    await refresh();
-      setShowPhotoModal(false);
-      resetPhotoForm();
-      alert(editingPhoto ? 'Photo updated successfully!' : 'Photo added successfully!');
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Error saving photo');
-    }
-  };
-
-  const editMovie = (movieData: MovieRow) => {
-    setEditingMovie(movieData);
-    setMovie({
-      category: movieData.category,
-      title_ar: movieData.title_ar,
-      title_en: movieData.title_en,
-      video_url: movieData.video_url
-    });
-    setShowMovieModal(true);
-  };
-
-  const editPhoto = (photoData: PhotoRow) => {
-    setEditingPhoto(photoData);
-    setPhoto({
-      category: photoData.category,
-      title_ar: photoData.title_ar,
-      title_en: photoData.title_en,
-      description_ar: photoData.description_ar,
-      description_en: photoData.description_en,
-      file: null
-    });
-    setShowPhotoModal(true);
-  };
-
-  const deleteMovie = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this movie?')) return;
-    try {
-      await fetch(`/api/admin/movies/${id}`, { method: 'DELETE' });
-      await refresh();
-      alert('Movie deleted successfully!');
-    } catch {
-      alert('Error deleting movie');
-    }
-  };
-
-  const deletePhoto = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this photo?')) return;
-    try {
-      await fetch(`/api/admin/photos/${id}`, { method: 'DELETE' });
-      await refresh();
-      alert('Photo deleted successfully!');
-    } catch {
-      alert('Error deleting photo');
-    }
-  };
-
-  const openMovieModal = () => {
-    resetMovieForm();
-    setShowMovieModal(true);
-  };
-
-  const openPhotoModal = () => {
-    resetPhotoForm();
-    setShowPhotoModal(true);
-  };
-
+function SectionHead({ title, href, linkLabel }: { title: string; href: string; linkLabel: string }) {
   return (
-    <div className={`min-h-screen bg-black text-white relative ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'} style={{background: '#000000'}}>
-      {/* Override global background */}
-      <div className="fixed inset-0 bg-black z-[-1]" />
-      {loadError && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-200">
-            {loadError}
-          </div>
-        </div>
-      )}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <button
-              onClick={openPhotoModal}
-              className="group relative overflow-hidden bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 rounded-xl p-6 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
-            >
-            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className={`relative flex items-center justify-center space-x-4 rtl:space-x-reverse ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Image className="w-8 h-8" />
-              <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
-                <h3 className="text-xl font-semibold">
-                  {isRTL ? 'إضافة مشروع صور' : 'Add Photo Project'}
-                </h3>
-                <p className="text-red-100 text-sm mt-1">
-                  {isRTL ? 'إنشاء مشروع صور جديد مع الصور' : 'Create a new photo entry with images'}
-                </p>
-              </div>
-              <Plus className={`w-6 h-6 ${isRTL ? 'mr-auto' : 'ml-auto'}`} />
-            </div>
-          </button>
-
-          <button
-            onClick={openMovieModal}
-            className="group relative overflow-hidden bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 rounded-xl p-6 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
-          >
-            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className={`relative flex items-center justify-center space-x-4 rtl:space-x-reverse ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Film className="w-8 h-8" />
-              <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
-                <h3 className="text-xl font-semibold">
-                  {isRTL ? 'إضافة مشروع أفلام' : 'Add Movie Project'}
-                </h3>
-                <p className="text-red-100 text-sm mt-1">
-                  {isRTL ? 'إنشاء مشروع فيلم جديد مع محتوى الفيديو' : 'Create a new movie entry with video content'}
-                </p>
-              </div>
-              <Plus className={`w-6 h-6 ${isRTL ? 'mr-auto' : 'ml-auto'}`} />
-            </div>
-          </button>
-        </div>
-
-        {/* Content Management Sections */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Photos Section */}
-          <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-6">
-            <div className="flex items-center justify-between mb-6">
-                  <h2 className={`text-2xl font-bold flex items-center space-x-2 rtl:space-x-reverse ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <Image className="w-6 h-6 text-red-400" />
-                <span>{isRTL ? `الصور (${photos.length})` : `Photos (${photos.length})`}</span>
-              </h2>
-            </div>
-            
-            <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
-              {photos.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
-                  <Image className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>{isRTL ? 'لا توجد صور بعد. أضف مشروع الصور الأول!' : 'No photos yet. Add your first photo project!'}</p>
-                </div>
-              ) : (
-                photos.map((photoItem) => (
-                  <div key={photoItem.id} className="bg-black/30 rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-colors">
-                    <div className={`flex items-start justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-white">{isRTL ? photoItem.title_ar : photoItem.title_en}</h3>
-                        <p className="text-gray-300 text-sm">{isRTL ? photoItem.title_en : photoItem.title_ar}</p>
-                        <p className="text-gray-400 text-xs mt-1 line-clamp-2">{isRTL ? photoItem.description_ar : photoItem.description_en}</p>
-                            <span className="inline-block bg-red-600/20 text-red-300 text-xs px-2 py-1 rounded mt-2">
-                          {photoCats.find(cat => cat.slug === photoItem.category)?.[isRTL ? 'name_ar' : 'name_en'] || photoItem.category}
-                        </span>
-                      </div>
-                      <div className={`flex space-x-2 rtl:space-x-reverse ${isRTL ? 'mr-4' : 'ml-4'}`}>
-                        <button
-                          onClick={() => editPhoto(photoItem)}
-                          className="p-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 rounded-lg transition-colors"
-                          title={isRTL ? 'تعديل' : 'Edit'}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => deletePhoto(photoItem.id)}
-                          className="p-2 bg-red-600/20 hover:bg-red-600/30 text-red-300 rounded-lg transition-colors"
-                          title={isRTL ? 'حذف' : 'Delete'}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Movies Section */}
-          <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className={`text-2xl font-bold flex items-center space-x-2 rtl:space-x-reverse ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <Film className="w-6 h-6 text-blue-400" />
-                <span>{isRTL ? `الأفلام (${movies.length})` : `Movies (${movies.length})`}</span>
-              </h2>
-            </div>
-            
-            <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
-              {movies.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
-                  <Film className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>{isRTL ? 'لا توجد أفلام بعد. أضف مشروع الفيلم الأول!' : 'No movies yet. Add your first movie project!'}</p>
-                </div>
-              ) : (
-                movies.map((movieItem) => (
-                  <div key={movieItem.id} className="bg-black/30 rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-colors">
-                    <div className={`flex items-start justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-white">{isRTL ? movieItem.title_ar : movieItem.title_en}</h3>
-                        <p className="text-gray-300 text-sm">{isRTL ? movieItem.title_en : movieItem.title_ar}</p>
-                        <span className="inline-block bg-blue-600/20 text-blue-300 text-xs px-2 py-1 rounded mt-2">
-                          {movieCats.find(cat => cat.slug === movieItem.category)?.[isRTL ? 'name_ar' : 'name_en'] || movieItem.category}
-                        </span>
-                      </div>
-                      <div className={`flex space-x-2 rtl:space-x-reverse ${isRTL ? 'mr-4' : 'ml-4'}`}>
-                        <button
-                          onClick={() => editMovie(movieItem)}
-                          className="p-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 rounded-lg transition-colors"
-                          title={isRTL ? 'تعديل' : 'Edit'}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => deleteMovie(movieItem.id)}
-                          className="p-2 bg-red-600/20 hover:bg-red-600/30 text-red-300 rounded-lg transition-colors"
-                          title={isRTL ? 'حذف' : 'Delete'}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Movie Modal */}
-      {showMovieModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-2xl border border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-gray-700">
-                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <h2 className={`text-2xl font-bold flex items-center space-x-2 rtl:space-x-reverse ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <Film className="w-6 h-6 text-red-400" />
-                    <span>
-                      {editingMovie 
-                        ? (isRTL ? 'تعديل فيلم' : 'Edit Movie') 
-                        : (isRTL ? 'إضافة فيلم جديد' : 'Add New Movie')
-                      }
-                    </span>
-                  </h2>
-                  <button
-                    onClick={() => setShowMovieModal(false)}
-                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                    title={isRTL ? 'إغلاق' : 'Close'}
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            
-            <form onSubmit={submitMovie} className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {isRTL ? 'الفئة' : 'Category'}
-                  </label>
-                  <select
-                        className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    value={movie.category}
-                    onChange={(e) => setMovie({ ...movie, category: e.target.value as MovieCategory })}
-                    required
-                  >
-                    {movieCats.map(mc => (
-                      <option key={mc.slug} value={mc.slug}>
-                        {isRTL ? `${mc.name_ar} / ${mc.name_en}` : `${mc.name_en} / ${mc.name_ar}`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {isRTL ? 'رابط الفيديو' : 'Video URL'}
-                  </label>
-                  <input
-                    type="url"
-                        className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder={isRTL ? 'رابط Dropbox أو YouTube/Vimeo' : 'https://dropbox.com/... or YouTube/Vimeo URL'}
-                    value={movie.video_url}
-                    onChange={(e) => setMovie({ ...movie, video_url: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 text-xs text-gray-500">
-                <div className="h-px flex-1 bg-gray-700" />
-                <span>{isRTL ? 'أو ارفع ملف فيديو مباشرة' : 'Or upload a video file directly'}</span>
-                <div className="h-px flex-1 bg-gray-700" />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                  {isRTL ? 'رفع ملف الفيديو' : 'Upload Video File'}
-                </label>
-                <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-600 p-6 transition-colors hover:border-red-500">
-                  <Upload className="h-9 w-9 text-gray-400" />
-                  <span className="text-sm text-gray-300">
-                    {movieVideoFile
-                      ? movieVideoFile.name
-                      : (isRTL ? 'اختر ملف فيديو من جهازك' : 'Choose a video file from your device')}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {isRTL ? 'MP4، WebM، MOV — يتم الرفع مباشرة إلى التخزين' : 'MP4, WebM, MOV — uploaded directly to storage'}
-                  </span>
-                  <input
-                    type="file"
-                    accept="video/mp4,video/webm,video/quicktime,video/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      setMovieVideoFile(e.target.files?.[0] || null);
-                      setVideoUploadProgress(0);
-                    }}
-                  />
-                </label>
-                {videoUploadProgress > 0 && (
-                  <div className="mt-3">
-                    <div className="mb-1 flex justify-between text-xs text-gray-400">
-                      <span>{isRTL ? 'جاري رفع الفيديو' : 'Uploading video'}</span>
-                      <span>{videoUploadProgress}%</span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-gray-700">
-                      <div
-                        className="h-full rounded-full bg-red-500 transition-[width] duration-200"
-                        style={{ width: `${videoUploadProgress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-                <p className={`mt-2 text-xs text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
-                  {isRTL
-                    ? 'عند اختيار ملف، سيتم استخدامه بدل الرابط المكتوب.'
-                    : 'When a file is selected, it will be used instead of the entered URL.'}
-                </p>
-              </div>
-
-              {/* Thumbnail Upload Section */}
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                  {isRTL ? 'صورة مصغرة للفيديو (اختيارية)' : 'Video Thumbnail (Optional)'}
-                </label>
-                <div className="border-2 border-dashed border-gray-600 rounded-lg p-4 hover:border-red-500 transition-colors">
-                  <input
-                    type="file"
-                    id="movie-thumbnail"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        // Store the file for form submission
-                        (e.target as HTMLInputElement & { movieThumbnailFile?: File }).movieThumbnailFile = file;
-                        // Show preview
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                          const preview = document.getElementById('thumbnail-preview') as HTMLImageElement;
-                          if (preview && e.target?.result) {
-                            preview.src = e.target.result as string;
-                            preview.classList.remove('hidden');
-                          }
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                  />
-                  <label
-                    htmlFor="movie-thumbnail"
-                    className="cursor-pointer flex flex-col items-center justify-center space-y-2"
-                  >
-                    <div className="flex items-center space-x-2 rtl:space-x-reverse text-gray-400">
-                      <Image className="w-8 h-8" />
-                      <span className="text-sm">
-                        {isRTL ? 'اختر صورة مصغرة أو اسحبها هنا' : 'Choose thumbnail or drag here'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      {isRTL ? 'PNG, JPG, WEBP حتى 10MB' : 'PNG, JPG, WEBP up to 10MB'}
-                    </p>
-                  </label>
-                  <img
-                    id="thumbnail-preview"
-                    className="hidden mt-4 max-w-full h-32 object-cover rounded-lg border border-gray-600"
-                    alt="Thumbnail preview"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {isRTL ? 'العنوان (إنجليزي)' : 'Title (English)'}
-                  </label>
-                  <input
-                    type="text"
-                        className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder={isRTL ? 'أدخل العنوان بالإنجليزية' : 'Enter English title'}
-                    value={movie.title_en}
-                    onChange={(e) => setMovie({ ...movie, title_en: e.target.value })}
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {isRTL ? 'العنوان (عربي)' : 'Title (Arabic)'}
-                  </label>
-                  <input
-                    type="text"
-                        className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder={isRTL ? 'أدخل العنوان بالعربية' : 'أدخل العنوان بالعربية'}
-                    value={movie.title_ar}
-                    onChange={(e) => setMovie({ ...movie, title_ar: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className={`flex justify-end space-x-4 rtl:space-x-reverse pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <button
-                  type="button"
-                  onClick={() => setShowMovieModal(false)}
-                  className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                >
-                  {isRTL ? 'إلغاء' : 'Cancel'}
-                </button>
-                <button
-                  type="submit"
-                  disabled={busy}
-                      className={`px-6 py-3 bg-red-600 hover:bg-red-500 rounded-lg transition-colors disabled:opacity-50 flex items-center space-x-2 rtl:space-x-reverse ${isRTL ? 'flex-row-reverse' : ''}`}
-                >
-                  <Save className="w-4 h-4" />
-                  <span>
-                    {busy 
-                      ? (isRTL ? 'جاري الحفظ...' : 'Saving...') 
-                      : editingMovie 
-                        ? (isRTL ? 'تحديث الفيلم' : 'Update Movie')
-                        : (isRTL ? 'إضافة فيلم' : 'Add Movie')
-                    }
-                  </span>
-                </button>
-            </div>
-          </form>
-          </div>
-        </div>
-      )}
-
-      {/* Photo Modal */}
-      {showPhotoModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-2xl border border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-700">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold flex items-center space-x-2">
-                  <Image className="w-6 h-6 text-red-400" />
-                  <span>{editingPhoto ? 'Edit Photo' : 'Add New Photo'}</span>
-                </h2>
-                <button
-                  onClick={() => setShowPhotoModal(false)}
-                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            
-            <form onSubmit={submitPhoto} className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                  <label className="block text-sm font-medium mb-2">Category</label>
-                  <select
-                        className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    value={photo.category}
-                    onChange={(e) => setPhoto({ ...photo, category: e.target.value as PhotoCategory })}
-                    required
-                  >
-                {photoCats.map(pc => (
-                  <option key={pc.slug} value={pc.slug}>{pc.name_en} / {pc.name_ar}</option>
-                ))}
-              </select>
-            </div>
-                
-            <div>
-                  <label className="block text-sm font-medium mb-2">Image File</label>
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-red-600 file:text-white hover:file:bg-red-500"
-                      onChange={(e) => setPhoto({ ...photo, file: e.target.files?.[0] ?? null })}
-                      required={!editingPhoto}
-                    />
-                    <Upload className="absolute right-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
-            </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                  <label className="block text-sm font-medium mb-2">Title (English)</label>
-                  <input
-                    type="text"
-                        className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder="Enter English title"
-                    value={photo.title_en}
-                    onChange={(e) => setPhoto({ ...photo, title_en: e.target.value })}
-                    required
-                  />
-            </div>
-                
-            <div>
-                  <label className="block text-sm font-medium mb-2">Title (Arabic)</label>
-                  <input
-                    type="text"
-                        className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder="أدخل العنوان بالعربية"
-                    value={photo.title_ar}
-                    onChange={(e) => setPhoto({ ...photo, title_ar: e.target.value })}
-                    required
-                  />
-                </div>
-            </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                  <label className="block text-sm font-medium mb-2">Description (English)</label>
-                  <textarea
-                    rows={4}
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                    placeholder="Enter English description"
-                    value={photo.description_en}
-                    onChange={(e) => setPhoto({ ...photo, description_en: e.target.value })}
-                    required
-                  />
-            </div>
-                
-            <div>
-                  <label className="block text-sm font-medium mb-2">Description (Arabic)</label>
-                  <textarea
-                    rows={4}
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                    placeholder="أدخل الوصف بالعربية"
-                    value={photo.description_ar}
-                    onChange={(e) => setPhoto({ ...photo, description_ar: e.target.value })}
-                    required
-                  />
-            </div>
-            </div>
-
-              <div className="flex justify-end space-x-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowPhotoModal(false)}
-                  className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-lg transition-colors disabled:opacity-50 flex items-center space-x-2"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>{busy ? 'Saving...' : editingPhoto ? 'Update Photo' : 'Add Photo'}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-      </div>
-      )}
-
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(0, 0, 0, 0.1);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.3);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.5);
-        }
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      `}</style>
+    <div className="flex items-center justify-between">
+      <h2 className="text-lg font-bold">{title}</h2>
+      <Link href={href} className="text-sm font-semibold text-[#F08A97] hover:underline">
+        {linkLabel}
+      </Link>
     </div>
   );
-};
+}
 
-export default AdminPage;
+export default function AdminOverviewPage() {
+  const { isRTL } = useLanguage();
+  const [movies, setMovies] = useState<MovieRow[]>([]);
+  const [photos, setPhotos] = useState<PhotoRow[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [movieCats, setMovieCats] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const urls = ['/api/admin/movies', '/api/admin/photos', '/api/admin/messages', '/api/admin/categories'];
+        const responses = await Promise.all(urls.map((u) => fetch(u)));
+        const [m, p, msg, c] = await Promise.all(responses.map((r) => r.json().catch(() => null)));
+        if (cancelled) return;
+        setMovies(Array.isArray(m) ? m : []);
+        setPhotos(Array.isArray(p) ? p : []);
+        setMessages(Array.isArray(msg) ? msg : []);
+        setMovieCats(Array.isArray(c?.movies) ? c.movies : []);
+        setError(!responses[0].ok || !responses[1].ok);
+      } catch {
+        if (!cancelled) setError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const unread = messages.filter((m) => !m.is_read).length;
+  const catName = (slug: string) => {
+    const c = movieCats.find((x) => x.slug === slug);
+    return c ? (isRTL ? c.name_ar : c.name_en) : slug;
+  };
+
+  const stats = [
+    { href: '/admin/movies', icon: Film, label: isRTL ? 'الأفلام' : 'Movies', value: movies.length },
+    { href: '/admin/photos', icon: ImageIcon, label: isRTL ? 'الصور' : 'Photos', value: photos.length },
+    { href: '/admin/messages', icon: Mail, label: isRTL ? 'رسائل جديدة' : 'New messages', value: unread },
+  ];
+
+  return (
+    <div className="space-y-7 px-4 py-6 sm:px-8 sm:py-8">
+      <header>
+        <h1 className="text-3xl font-bold">{isRTL ? 'نظرة عامة' : 'Overview'}</h1>
+        <p className="mt-1 text-sm text-gray-400">{isRTL ? 'ملخص المحتوى والرسائل' : 'Content and messages summary'}</p>
+      </header>
+
+      {error && (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-200">
+          {isRTL ? 'تعذر تحميل المحتوى. تأكد من اتصال قاعدة البيانات.' : 'Content could not be loaded. Check the database connection.'}
+        </div>
+      )}
+
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {stats.map(({ href, icon: Icon, label, value }) => (
+          <Link key={href} href={href} className={`${panelCls} flex items-center justify-between p-5 transition-colors hover:bg-[#1a1a23]`}>
+            <div>
+              <div className="text-sm text-gray-400">{label}</div>
+              <div className="mt-1 text-4xl font-bold">{loading ? '–' : value}</div>
+            </div>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#2A1426] text-orbia-pink">
+              <Icon className="h-5 w-5" />
+            </div>
+          </Link>
+        ))}
+      </section>
+
+      <section className="space-y-3.5">
+        <SectionHead title={isRTL ? 'آخر الأفلام' : 'Latest movies'} href="/admin/movies" linkLabel={isRTL ? 'عرض كل الأفلام' : 'View all movies'} />
+        {!loading && movies.length === 0 ? (
+          <p className="py-8 text-center text-gray-500">{isRTL ? 'لا توجد أفلام بعد' : 'No movies yet'}</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {movies.slice(0, 3).map((m) => (
+              <div key={m.id} className={`${panelCls} overflow-hidden`}>
+                <MovieThumb url={m.video_url} thumbnail={m.thumbnail_url} className="h-40 w-full" />
+                <div className="space-y-1.5 p-4">
+                  <div dir="auto" className="font-bold leading-6">{isRTL ? m.title_ar : m.title_en}</div>
+                  <div dir="auto" className="text-[13px] text-gray-400">{isRTL ? m.title_en : m.title_ar}</div>
+                  <span className={`inline-block ${chipCls}`}>{catName(m.category)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className={`${panelCls} space-y-3.5 p-5`}>
+          <SectionHead title={isRTL ? 'آخر الصور' : 'Latest photos'} href="/admin/photos" linkLabel={isRTL ? 'عرض كل الصور' : 'View all photos'} />
+          {!loading && photos.length === 0 ? (
+            <p className="py-10 text-center text-gray-500">{isRTL ? 'لا توجد صور بعد' : 'No photos yet'}</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-2.5">
+              {photos.slice(0, 4).map((p) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={p.id} src={p.image_url} alt={isRTL ? p.title_ar : p.title_en} className="aspect-[4/3] w-full rounded-lg object-cover" />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className={`${panelCls} space-y-1 p-5`}>
+          <SectionHead title={isRTL ? 'آخر الرسائل' : 'Latest messages'} href="/admin/messages" linkLabel={isRTL ? 'عرض كل الرسائل' : 'View all messages'} />
+          {!loading && messages.length === 0 ? (
+            <p className="py-10 text-center text-gray-500">{isRTL ? 'لا توجد رسائل بعد' : 'No messages yet'}</p>
+          ) : (
+            <div className="pt-2">
+              {messages.slice(0, 3).map((m) => (
+                <Link key={m.id} href="/admin/messages" className="flex gap-3 border-t border-[#25252F] py-3">
+                  <span className={`mt-2 h-2.5 w-2.5 shrink-0 rounded-full ${m.is_read ? 'bg-[#3A3A46]' : 'bg-orbia-pink'}`} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`truncate text-sm ${m.is_read ? 'font-semibold' : 'font-bold'}`}>{m.name} · {m.company}</span>
+                      <span className="shrink-0 text-xs text-gray-500">{new Date(m.created_at).toLocaleString(isRTL ? 'ar-EG' : 'en-GB')}</span>
+                    </div>
+                    <div className="mt-0.5 truncate text-[13px] text-gray-400">{m.message}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}

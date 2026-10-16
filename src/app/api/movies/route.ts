@@ -9,9 +9,9 @@ export async function GET() {
   try {
     const rows = await sql`SELECT * FROM movies ORDER BY created_at DESC;`;
     return NextResponse.json(rows);
-  } catch (_e: unknown) {
-    // Be resilient in dev if DB is unreachable
-    return NextResponse.json([]);
+   } catch (e: unknown) {
+    console.error('GET /api/movies failed:', e);
+    return NextResponse.json({ error: 'Failed to load movies' }, { status: 500 });
   }
 }
 

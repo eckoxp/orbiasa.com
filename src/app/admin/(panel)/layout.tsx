@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { LayoutDashboard, Mail, Home, LogOut, Globe, Menu } from 'lucide-react';
+import { LayoutDashboard, Film, Image as ImageIcon, Mail, Home, LogOut, Globe, Menu } from 'lucide-react';
 
 export default function AdminPanelLayout({ children }: { children: React.ReactNode }) {
   const { isRTL, toggleLanguage } = useLanguage();
@@ -27,6 +27,8 @@ export default function AdminPanelLayout({ children }: { children: React.ReactNo
 
   const items = [
     { href: '/admin', icon: LayoutDashboard, label: isRTL ? 'لوحة التحكم' : 'Dashboard', badge: 0 },
+    { href: '/admin/movies', icon: Film, label: isRTL ? 'الأفلام' : 'Movies', badge: 0 },
+    { href: '/admin/photos', icon: ImageIcon, label: isRTL ? 'الصور' : 'Photos', badge: 0 },
     { href: '/admin/messages', icon: Mail, label: isRTL ? 'الرسائل' : 'Messages', badge: unread },
   ];
 
