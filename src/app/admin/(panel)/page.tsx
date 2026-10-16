@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { MovieCategory, PhotoCategory, MovieRow, PhotoRow } from '@/lib/db';
-import { Plus, Edit, Trash2, Film, Image, Save, X, Upload, LogOut, Globe, Mail } from 'lucide-react';
+import { Plus, Edit, Trash2, Film, Image, Save, X, Upload } from 'lucide-react';
 import { upload } from '@vercel/blob/client';
 
 interface CategoryData {
@@ -13,7 +13,7 @@ interface CategoryData {
 }
 
 const AdminPage: React.FC = () => {
-  const { isRTL, toggleLanguage } = useLanguage();
+  const { isRTL } = useLanguage();
   const [busy, setBusy] = useState(false);
   const [movies, setMovies] = useState<MovieRow[]>([]);
   const [photos, setPhotos] = useState<PhotoRow[]>([]);
@@ -247,14 +247,6 @@ const AdminPage: React.FC = () => {
     setShowPhotoModal(true);
   };
 
-  const handleLogout = () => {
-    if (confirm(isRTL ? 'هل أنت متأكد من تسجيل الخروج؟' : 'Are you sure you want to logout?')) {
-      // Clear admin cookie and redirect to login
-      document.cookie = 'admin_auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      window.location.href = '/admin/login';
-    }
-  };
-
   return (
     <div className={`min-h-screen bg-black text-white relative ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'} style={{background: '#000000'}}>
       {/* Override global background */}
@@ -266,64 +258,6 @@ const AdminPage: React.FC = () => {
           </div>
         </div>
       )}
-      {/* Header */}
-      <div className="border-b border-gray-800 bg-black backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                {isRTL ? 'لوحة تحكم أوربيا' : 'Orbia Admin Control Panel'}
-              </h1>
-              <p className="text-gray-400 mt-1 text-sm">
-                {isRTL ? 'إدارة محتوى الأفلام والصور' : 'Manage your movies and photos content'}
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-4 rtl:space-x-reverse">
-              {/* Language Toggle */}
-              <button
-                onClick={toggleLanguage}
-                className="flex items-center space-x-2 rtl:space-x-reverse px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-                title={isRTL ? 'تغيير اللغة' : 'Change Language'}
-              >
-                <Globe className="w-4 h-4" />
-                <span className="text-sm font-medium">{isRTL ? 'EN' : 'عربي'}</span>
-              </button>
-              {/* Messages Button */}
-              <button
-                onClick={() => window.location.href = '/admin/messages'}
-                className="flex items-center space-x-2 rtl:space-x-reverse px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-                title={isRTL ? 'رسائل التواصل' : 'Contact Messages'}
-              >
-                <Mail className="w-4 h-4" />
-                <span className="text-sm font-medium">{isRTL ? 'الرسائل' : 'Messages'}</span>
-              </button>
-              {/* Home Button */}
-              <button
-                onClick={() => window.location.href = '/'}
-                className="flex items-center space-x-2 rtl:space-x-reverse px-3 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors"
-                title={isRTL ? 'العودة للموقع' : 'Back to Website'}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                <span className="text-sm font-medium">{isRTL ? 'الموقع' : 'Home'}</span>
-              </button>
-              
-              {/* Logout Button */}
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 rtl:space-x-reverse px-3 py-2 bg-red-600 hover:bg-red-500 rounded-lg transition-colors"
-                title={isRTL ? 'تسجيل الخروج' : 'Logout'}
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="text-sm font-medium">{isRTL ? 'خروج' : 'Logout'}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Action Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

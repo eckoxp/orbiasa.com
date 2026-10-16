@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Trash2, Mail, MailOpen, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Trash2, Mail, MailOpen } from 'lucide-react';
 
 interface ContactMessage {
   id: number;
@@ -59,7 +59,6 @@ export default function AdminMessagesPage() {
   };
 
   const unread = messages.filter((m) => !m.is_read).length;
-  const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
   return (
     <div className="min-h-screen bg-black text-white" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -71,13 +70,6 @@ export default function AdminMessagesPage() {
               {isRTL ? `${messages.length} رسالة، ${unread} غير مقروءة` : `${messages.length} messages, ${unread} unread`}
             </p>
           </div>
-          <button
-            onClick={() => (window.location.href = '/admin')}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors text-sm"
-          >
-            <BackIcon className="w-4 h-4" />
-            {isRTL ? 'لوحة التحكم' : 'Dashboard'}
-          </button>
         </div>
 
         {loading && <p className="text-gray-400">{isRTL ? 'جاري التحميل...' : 'Loading...'}</p>}
