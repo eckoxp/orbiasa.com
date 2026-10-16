@@ -13,8 +13,10 @@ const ContactUs = () => {
     phone: '',
     company: '',
     position: '',
-    message: ''
+    message: '',
+    website: ''
   });
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error' | 'limited'>('idle');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -24,10 +26,21 @@ const ContactUs = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', formData);
+    setStatus('sending');
+    try {
+      const res = await fetch('/api/contact', { method: 'POST', body: JSON.stringify(formData) });
+      if (res.status === 429) {
+        setStatus('limited');
+        return;
+      }
+      if (!res.ok) throw new Error('Request failed');
+      setFormData({ name: '', email: '', phone: '', company: '', position: '', message: '', website: '' });
+      setStatus('success');
+    } catch {
+      setStatus('error');
+    }
   };
 
   return (
@@ -144,13 +157,42 @@ const ContactUs = () => {
                 />
               </div>
 
+              {/* Honeypot: hidden from real users, bots tend to fill it */}
+              <input
+                type="text"
+                name="website"
+                value={formData.website}
+                onChange={handleInputChange}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+              />
+
               <button
                 type="submit"
-                className="w-full bg-orbia-pink hover:bg-orbia-pink/90 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-300 transform hover:scale-105 font-arabic flex items-center justify-center space-x-2 rtl:space-x-reverse"
+                disabled={status === 'sending'}
+                className="w-full disabled:opacity-60 bg-orbia-pink hover:bg-orbia-pink/90 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-300 transform hover:scale-105 font-arabic flex items-center justify-center space-x-2 rtl:space-x-reverse"
               >
                 <Send className="w-5 h-5" />
                 <span>{t('contact.form.submit')}</span>
               </button>
+
+              {status === 'success' && (
+                <p className="text-green-400 text-center font-arabic">
+                  {isRTL ? 'تم إرسال رسالتك بنجاح، سنتواصل معك قريباً.' : 'Your message was sent. We will contact you soon.'}
+                </p>
+              )}
+              {status === 'limited' && (
+                <p className="text-yellow-400 text-center font-arabic">
+                  {isRTL ? 'أرسلت رسائل كثيرة، حاول لاحقاً.' : 'Too many messages, please try again later.'}
+                </p>
+              )}
+              {status === 'error' && (
+                <p className="text-red-400 text-center font-arabic">
+                  {isRTL ? 'حدث خطأ، حاول مرة أخرى.' : 'Something went wrong, please try again.'}
+                </p>
+              )}
             </form>
           </div>
         </ScrollReveal>
