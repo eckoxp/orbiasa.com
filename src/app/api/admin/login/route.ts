@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   const body: LoginBody = await req.json().catch(() => ({}));
   const password = String(body?.password || '');
 
-  if (password !== expected) {
+  if (password !== expected) {  
     await recordFailure(ip).catch(() => undefined);
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
   }
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   await clearFailures(ip).catch(() => undefined);
   const res = NextResponse.json({ ok: true });
   res.cookies.set('admin_auth', await createSessionToken(), {
-    httpOnly: true, sameSite: 'lax', secure: true, path: '/', maxAge: SESSION_MAX_AGE,
+    httpOnly: true, sameSite: 'lax', secure: false, path: '/', maxAge: SESSION_MAX_AGE,
   });
   return res;
 }

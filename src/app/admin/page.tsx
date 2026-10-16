@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { MovieCategory, PhotoCategory, MovieRow, PhotoRow } from '@/lib/db';
-import { Plus, Edit, Trash2, Film, Image, Save, X, Upload, LogOut, Globe } from 'lucide-react';
+import { Plus, Edit, Trash2, Film, Image, Save, X, Upload, LogOut, Globe, Mail } from 'lucide-react';
 import { upload } from '@vercel/blob/client';
 
 interface CategoryData {
@@ -289,7 +289,15 @@ const AdminPage: React.FC = () => {
                 <Globe className="w-4 h-4" />
                 <span className="text-sm font-medium">{isRTL ? 'EN' : 'عربي'}</span>
               </button>
-              
+              {/* Messages Button */}
+              <button
+                onClick={() => window.location.href = '/admin/messages'}
+                className="flex items-center space-x-2 rtl:space-x-reverse px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+                title={isRTL ? 'رسائل التواصل' : 'Contact Messages'}
+              >
+                <Mail className="w-4 h-4" />
+                <span className="text-sm font-medium">{isRTL ? 'الرسائل' : 'Messages'}</span>
+              </button>
               {/* Home Button */}
               <button
                 onClick={() => window.location.href = '/'}
