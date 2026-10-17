@@ -6,7 +6,7 @@ import type { PhotoRow } from '@/lib/db';
 import { Plus, Edit, Trash2, Save, Upload, Search } from 'lucide-react';
 import Modal from '@/components/admin/Modal';
 import { panelCls, inputCls, labelCls, primaryBtn, ghostBtn, iconBtn, chipCls } from '@/components/admin/ui';
-
+import { uploadFileToR2 } from '@/lib/uploadToR2';
 interface Category {
   slug: string;
   name_ar: string;
@@ -115,7 +115,7 @@ export default function AdminPhotosPage() {
       fd.append('title_en', form.title_en);
       fd.append('description_ar', form.description_ar);
       fd.append('description_en', form.description_en);
-      if (file) fd.append('file', file);
+      if (file) fd.append('image_url', await uploadFileToR2(file, 'photos'));
       if (editing) fd.append('id', editing.id);
 
       const res = await fetch('/api/admin/photos', { method: 'POST', body: fd });

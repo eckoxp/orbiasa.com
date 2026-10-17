@@ -7,42 +7,14 @@ import { Plus, Edit, Trash2, Save, Upload, Search, Image as ImageIcon } from 'lu
 import Modal from '@/components/admin/Modal';
 import MovieThumb from '@/components/admin/MovieThumb';
 import { panelCls, inputCls, labelCls, primaryBtn, ghostBtn, iconBtn, chipCls } from '@/components/admin/ui';
-
+import { uploadFileToR2 } from '@/lib/uploadToR2';
 interface Category {
   slug: string;
   name_ar: string;
   name_en: string;
 }
 
-const uploadFileToR2 = async (
-  file: File,
-  folder: 'movies' | 'movie-thumbnails',
-  onProgress?: (percentage: number) => void,
-) => {
-  const prepareResponse = await fetch('/api/admin/r2-upload', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ folder, fileName: file.name, contentType: file.type, fileSize: file.size }),
-  });
-  const prepared = await prepareResponse.json();
-  if (!prepareResponse.ok) throw new Error(prepared.error || 'Could not prepare upload');
 
-  await new Promise<void>((resolve, reject) => {
-    const request = new XMLHttpRequest();
-    request.open('PUT', prepared.uploadUrl);
-    request.setRequestHeader('Content-Type', file.type);
-    request.upload.onprogress = (event) => {
-      if (event.lengthComputable) onProgress?.(Math.round((event.loaded / event.total) * 100));
-    };
-    request.onload = () => request.status >= 200 && request.status < 300
-      ? resolve()
-      : reject(new Error(`Upload failed (${request.status})`));
-    request.onerror = () => reject(new Error('Upload failed. Check the R2 CORS configuration.'));
-    request.send(file);
-  });
-
-  return prepared.publicUrl as string;
-};
 
 const emptyForm = { category: '', title_ar: '', title_en: '', video_url: '' };
 
