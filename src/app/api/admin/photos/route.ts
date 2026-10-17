@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { put } from '@vercel/blob';
 import { sql, PhotoCategory } from '@/lib/db';
 
 export async function POST(req: Request) {
@@ -10,7 +9,7 @@ export async function POST(req: Request) {
   const title_en = String(form.get('title_en') || '');
   const description_ar = String(form.get('description_ar') || '');
   const description_en = String(form.get('description_en') || '');
-  const file = form.get('file') as File | null;
+  const image_url = String(form.get('image_url') || '');
   
   if (!category || !title_ar || !title_en || !description_ar || !description_en) {
     return NextResponse.json({ ok: false, error: 'Missing fields' }, { status: 400 });
@@ -19,14 +18,12 @@ export async function POST(req: Request) {
   try {
     if (id) {
       // Update existing photo
-      if (file) {
-        // Upload new image if provided
-        const blob = await put(`photos/${Date.now()}-${file.name}`, file, { access: 'public' });
+      if (image_url) {
         await sql`
           UPDATE photos 
           SET category = ${category}, title_ar = ${title_ar}, title_en = ${title_en}, 
               description_ar = ${description_ar}, description_en = ${description_en}, 
-              image_url = ${blob.url}, updated_at = NOW()
+              image_url = ${image_url}, updated_at = NOW()
           WHERE id = ${id};
         `;
       } else {
@@ -39,12 +36,11 @@ export async function POST(req: Request) {
         `;
       }
     } else {
-      // Insert new photo - file is required for new entries
-      if (!file) {
+      // The browser uploads the file directly to R2 before saving this record.
+      if (!image_url) {
         return NextResponse.json({ ok: false, error: 'Image file is required for new photos' }, { status: 400 });
       }
-      const blob = await put(`photos/${Date.now()}-${file.name}`, file, { access: 'public' });
-      await sql`INSERT INTO photos (category,title_ar,title_en,description_ar,description_en,image_url) VALUES (${category}, ${title_ar}, ${title_en}, ${description_ar}, ${description_en}, ${blob.url});`;
+      await sql`INSERT INTO photos (category,title_ar,title_en,description_ar,description_en,image_url) VALUES (${category}, ${title_ar}, ${title_en}, ${description_ar}, ${description_en}, ${image_url});`;
     }
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
