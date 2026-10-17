@@ -59,38 +59,37 @@ const VideoThumbnail: React.FC<{
   customThumbnail?: string;
   onThumbnailGenerated?: (thumbnail: string) => void;
 }> = ({ videoUrl, title, fallbackThumbnail, customThumbnail, onThumbnailGenerated }) => {
-  const [thumbnail, setThumbnail] = useState(customThumbnail || fallbackThumbnail);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [videoPreviewFailed, setVideoPreviewFailed] = useState(false);
+   // The Vimeo result is stored together with the URL it was fetched for, so a stale
+  // result is never shown after videoUrl changes (no effect has to reset state).
+  const [vimeoResult, setVimeoResult] = useState<{ url: string; thumbnail: string | null } | null>(null);
+  const [failedVideoUrl, setFailedVideoUrl] = useState<string | null>(null);
   const youtubeId = getYouTubeVideoId(videoUrl);
   const driveFileId = getGoogleDriveFileId(videoUrl);
   const isVimeo = videoUrl.includes('vimeo.com');
   const canUseVideoFrame = Boolean(videoUrl && !youtubeId && !driveFileId && !isVimeo);
 
-  // Uploaded thumbnails take priority. For direct video files, the browser
-  // displays a paused frame from the video itself below.
-  useEffect(() => {
-    setThumbnail(customThumbnail || fallbackThumbnail);
-    setVideoPreviewFailed(false);
-  }, [customThumbnail, fallbackThumbnail, videoUrl]);
+  // Uploaded thumbnails take priority, then the Vimeo thumbnail, then the fallback.
+  // For direct video files, the browser displays a paused frame from the video itself below.
+  const vimeoThumbnail = vimeoResult?.url === videoUrl ? vimeoResult.thumbnail : null;
+  const thumbnail = customThumbnail || vimeoThumbnail || fallbackThumbnail;
+  const isGenerating = Boolean(isVimeo && !customThumbnail && vimeoResult?.url !== videoUrl);
+  const videoPreviewFailed = failedVideoUrl === videoUrl;
 
   // Vimeo exposes the real video thumbnail through its public oEmbed endpoint.
   useEffect(() => {
     if (customThumbnail || !isVimeo) return;
 
     let cancelled = false;
-    setIsGenerating(true);
     fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(videoUrl)}`)
       .then((response) => response.ok ? response.json() : Promise.reject())
       .then((data) => {
-        if (!cancelled && data.thumbnail_url) {
-          setThumbnail(data.thumbnail_url);
-          onThumbnailGenerated?.(data.thumbnail_url);
-        }
+        if (cancelled) return;
+        const found: string | null = data.thumbnail_url || null;
+        setVimeoResult({ url: videoUrl, thumbnail: found });
+        if (found) onThumbnailGenerated?.(found);
       })
-      .catch(() => undefined)
-      .finally(() => {
-        if (!cancelled) setIsGenerating(false);
+      .catch(() => {
+        if (!cancelled) setVimeoResult({ url: videoUrl, thumbnail: null });
       });
 
     return () => { cancelled = true; };
@@ -113,7 +112,7 @@ const VideoThumbnail: React.FC<{
               : 0.1;
           }}
           onSeeked={(event) => event.currentTarget.pause()}
-          onError={() => setVideoPreviewFailed(true)}
+onError={() => setFailedVideoUrl(videoUrl)}
         />
       ) : (
         <img
