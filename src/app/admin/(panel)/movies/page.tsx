@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { MovieRow } from '@/lib/db';
 import { Plus, Edit, Trash2, Save, Upload, Search, Image as ImageIcon } from 'lucide-react';
-import { upload } from '@vercel/blob/client';
 import Modal from '@/components/admin/Modal';
 import MovieThumb from '@/components/admin/MovieThumb';
 import { panelCls, inputCls, labelCls, primaryBtn, ghostBtn, iconBtn, chipCls } from '@/components/admin/ui';
@@ -14,6 +13,36 @@ interface Category {
   name_ar: string;
   name_en: string;
 }
+
+const uploadFileToR2 = async (
+  file: File,
+  folder: 'movies' | 'movie-thumbnails',
+  onProgress?: (percentage: number) => void,
+) => {
+  const prepareResponse = await fetch('/api/admin/r2-upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ folder, fileName: file.name, contentType: file.type, fileSize: file.size }),
+  });
+  const prepared = await prepareResponse.json();
+  if (!prepareResponse.ok) throw new Error(prepared.error || 'Could not prepare upload');
+
+  await new Promise<void>((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open('PUT', prepared.uploadUrl);
+    request.setRequestHeader('Content-Type', file.type);
+    request.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress?.(Math.round((event.loaded / event.total) * 100));
+    };
+    request.onload = () => request.status >= 200 && request.status < 300
+      ? resolve()
+      : reject(new Error(`Upload failed (${request.status})`));
+    request.onerror = () => reject(new Error('Upload failed. Check the R2 CORS configuration.'));
+    request.send(file);
+  });
+
+  return prepared.publicUrl as string;
+};
 
 const emptyForm = { category: '', title_ar: '', title_en: '', video_url: '' };
 
@@ -110,15 +139,7 @@ export default function AdminMoviesPage() {
       let videoUrl = form.video_url.trim();
 
       if (videoFile) {
-        const safeName = videoFile.name.replace(/[^a-zA-Z0-9._-]/g, '-');
-        const blob = await upload(`movies/${Date.now()}-${safeName}`, videoFile, {
-          access: 'public',
-          handleUploadUrl: '/api/admin/video-upload',
-          multipart: true,
-          contentType: videoFile.type,
-          onUploadProgress: ({ percentage }) => setProgress(Math.round(percentage)),
-        });
-        videoUrl = blob.url;
+        videoUrl = await uploadFileToR2(videoFile, 'movies', setProgress);
       }
 
       if (!videoUrl) {
@@ -131,7 +152,7 @@ export default function AdminMoviesPage() {
       fd.append('title_en', form.title_en);
       fd.append('video_url', videoUrl);
       if (editing) fd.append('id', editing.id);
-      if (thumbFile) fd.append('thumbnail', thumbFile);
+      if (thumbFile) fd.append('thumbnail_url', await uploadFileToR2(thumbFile, 'movie-thumbnails'));
 
       const res = await fetch('/api/admin/movies', { method: 'POST', body: fd });
       const data = await res.json().catch(() => ({}));
