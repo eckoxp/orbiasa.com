@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
+import StorageMeter from '@/components/admin/StorageMeter';
 import { LayoutDashboard, Film, Image as ImageIcon, Mail, Home, LogOut, Globe, Menu } from 'lucide-react';
 
 export default function AdminPanelLayout({ children }: { children: React.ReactNode }) {
@@ -78,7 +79,11 @@ export default function AdminPanelLayout({ children }: { children: React.ReactNo
           </Link>
         ))}
 
-        <div className="mt-auto flex flex-col gap-1.5 border-t border-[#2A1426] pt-4">
+        <div className="mt-auto">
+          <StorageMeter compact />
+        </div>
+
+        <div className="flex flex-col gap-1.5 border-t border-[#2A1426] pt-4">
           <button onClick={toggleLanguage} className={`${linkBase} text-[#C9B8C6] hover:bg-white/5`}>
             <Globe className="w-[18px] h-[18px]" />
             <span>{isRTL ? 'English' : 'عربي'}</span>

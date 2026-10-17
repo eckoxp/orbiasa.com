@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import type { MovieRow } from '@/lib/db';
 import { Plus, Edit, Trash2, Save, Upload, Search, Image as ImageIcon } from 'lucide-react';
 import Modal from '@/components/admin/Modal';
+import { notifyStorageChanged } from '@/components/admin/StorageMeter';
 import MovieThumb from '@/components/admin/MovieThumb';
 import { panelCls, inputCls, labelCls, primaryBtn, ghostBtn, iconBtn, chipCls } from '@/components/admin/ui';
 import { uploadFileToR2 } from '@/lib/uploadToR2';
@@ -131,6 +132,7 @@ export default function AdminMoviesPage() {
       if (!res.ok) throw new Error(data?.error || 'Request failed');
 
       await load();
+      notifyStorageChanged();
       setShowModal(false);
     } catch (error) {
       alert(error instanceof Error ? error.message : isRTL ? 'تعذر حفظ الفيلم' : 'Error saving movie');
@@ -145,6 +147,7 @@ export default function AdminMoviesPage() {
       const res = await fetch(`/api/admin/movies/${m.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
       await load();
+      notifyStorageChanged();
     } catch {
       alert(isRTL ? 'تعذر حذف الفيلم' : 'Error deleting movie');
     }

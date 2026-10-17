@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql, PhotoCategory } from '@/lib/db';
+import { deleteReplacedR2Files } from '@/lib/r2';
 
 export async function POST(req: Request) {
   const form = await req.formData();
@@ -15,6 +16,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'Missing fields' }, { status: 400 });
   }
   
+  // The file this record used before the edit; a replaced one is removed from R2 after saving.
+  const previous = id
+    ? ((await sql`SELECT image_url FROM photos WHERE id = ${id};`.catch(() => [])) as Record<string, string | null>[])[0]
+    : undefined;
+
   try {
     if (id) {
       // Update existing photo
@@ -42,6 +48,7 @@ export async function POST(req: Request) {
       }
       await sql`INSERT INTO photos (category,title_ar,title_en,description_ar,description_en,image_url) VALUES (${category}, ${title_ar}, ${title_en}, ${description_ar}, ${description_en}, ${image_url});`;
     }
+    await deleteReplacedR2Files([previous?.image_url], [image_url || previous?.image_url]);
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e);
@@ -58,5 +65,3 @@ export async function GET() {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
-

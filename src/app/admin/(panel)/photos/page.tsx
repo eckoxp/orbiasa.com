@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import type { PhotoRow } from '@/lib/db';
 import { Plus, Edit, Trash2, Save, Upload, Search } from 'lucide-react';
 import Modal from '@/components/admin/Modal';
+import { notifyStorageChanged } from '@/components/admin/StorageMeter';
 import { panelCls, inputCls, labelCls, primaryBtn, ghostBtn, iconBtn, chipCls } from '@/components/admin/ui';
 import { uploadFileToR2 } from '@/lib/uploadToR2';
 interface Category {
@@ -123,6 +124,7 @@ export default function AdminPhotosPage() {
       if (!res.ok) throw new Error(data?.error || 'Request failed');
 
       await load();
+      notifyStorageChanged();
       setShowModal(false);
     } catch (error) {
       alert(error instanceof Error ? error.message : isRTL ? 'تعذر حفظ الصورة' : 'Error saving photo');
@@ -137,6 +139,7 @@ export default function AdminPhotosPage() {
       const res = await fetch(`/api/admin/photos/${p.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
       await load();
+      notifyStorageChanged();
     } catch {
       alert(isRTL ? 'تعذر حذف الصورة' : 'Error deleting photo');
     }

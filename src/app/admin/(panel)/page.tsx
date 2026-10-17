@@ -6,6 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import type { MovieRow, PhotoRow } from '@/lib/db';
 import { Film, Image as ImageIcon, Mail } from 'lucide-react';
 import MovieThumb from '@/components/admin/MovieThumb';
+import StorageMeter from '@/components/admin/StorageMeter';
 import { panelCls, chipCls } from '@/components/admin/ui';
 
 interface Category {
@@ -105,6 +106,8 @@ export default function AdminOverviewPage() {
           </Link>
         ))}
       </section>
+
+      <StorageMeter />
 
       <section className="space-y-3.5">
         <SectionHead title={isRTL ? 'آخر الأفلام' : 'Latest movies'} href="/admin/movies" linkLabel={isRTL ? 'عرض كل الأفلام' : 'View all movies'} />

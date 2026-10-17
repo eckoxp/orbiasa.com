@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql, MovieCategory, ensureTables } from '@/lib/db';
+import { deleteReplacedR2Files } from '@/lib/r2';
 
 export async function POST(req: Request) {
   const form = await req.formData();
@@ -15,6 +16,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'Missing fields' }, { status: 400 });
   }
   
+  // Files this record used before the edit; replaced ones are removed from R2 after saving.
+  const previous = id
+    ? ((await sql`SELECT video_url, thumbnail_url FROM movies WHERE id = ${id};`.catch(() => [])) as Record<string, string | null>[])[0]
+    : undefined;
+  const removeReplacedFiles = () =>
+    deleteReplacedR2Files(
+      [previous?.video_url, previous?.thumbnail_url],
+      [video_url, thumbnail_url || previous?.thumbnail_url]
+    );
+
   try {
     if (id) {
       // Update existing movie
@@ -35,6 +46,7 @@ export async function POST(req: Request) {
       // Insert new movie
       await sql`INSERT INTO movies (category,title_ar,title_en,video_url,thumbnail_url) VALUES (${category}, ${title_ar}, ${title_en}, ${video_url}, ${thumbnail_url});`;
     }
+    await removeReplacedFiles();
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e);
@@ -68,6 +80,7 @@ export async function POST(req: Request) {
           await sql`INSERT INTO movies (category,title_ar,title_en,video_url,thumbnail_url) VALUES (${category}, ${title_ar}, ${title_en}, ${video_url}, ${retryThumbnailUrl});`;
         }
         
+        await removeReplacedFiles();
         return NextResponse.json({ ok: true });
       } catch (migrationError) {
         console.error('Migration failed:', migrationError);
@@ -88,5 +101,3 @@ export async function GET() {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
-

@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const requiredEnv = (name: string): string => {
@@ -46,4 +46,49 @@ export const deleteR2ObjectByUrl = async (url: string | null | undefined): Promi
   if (!url || !base || !url.startsWith(`${base}/`)) return;
   const key = url.slice(base.length + 1).split('/').map(decodeURIComponent).join('/');
   await client().send(new DeleteObjectCommand({ Bucket: requiredEnv('R2_BUCKET_NAME'), Key: key }));
+};
+
+// Removes files that a record no longer uses after an edit (best effort), so they do not
+// keep taking space in the bucket. Files that are still in use are kept.
+export const deleteReplacedR2Files = async (
+  oldUrls: (string | null | undefined)[],
+  currentUrls: (string | null | undefined)[]
+): Promise<void> => {
+  const inUse = new Set(currentUrls.filter(Boolean));
+  for (const url of oldUrls) {
+    if (!url || inUse.has(url)) continue;
+    try {
+      await deleteR2ObjectByUrl(url);
+    } catch (error) {
+      console.error('R2 cleanup failed:', error);
+    }
+  }
+};
+
+// ---- Storage meter ----------------------------------------------------------------
+const GIB = 1024 ** 3;
+
+// The limit is ours, not Cloudflare's. Change it with STORAGE_LIMIT_GB (default 200).
+export const getStorageLimitBytes = (): number => {
+  const gb = Number(process.env.STORAGE_LIMIT_GB);
+  return (Number.isFinite(gb) && gb > 0 ? gb : 200) * GIB;
+};
+
+// Adds up the size of every file currently in the bucket. Files that still live on
+// Vercel Blob are not in R2, so they are not counted.
+export const getR2Usage = async (): Promise<{ usedBytes: number; objectCount: number }> => {
+  const r2 = client();
+  const Bucket = requiredEnv('R2_BUCKET_NAME');
+  let usedBytes = 0;
+  let objectCount = 0;
+  let token: string | undefined;
+  do {
+    const page = await r2.send(new ListObjectsV2Command({ Bucket, ContinuationToken: token }));
+    for (const object of page.Contents ?? []) {
+      usedBytes += object.Size ?? 0;
+      objectCount += 1;
+    }
+    token = page.IsTruncated ? page.NextContinuationToken : undefined;
+  } while (token);
+  return { usedBytes, objectCount };
 };

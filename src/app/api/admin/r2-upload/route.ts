@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createR2UploadUrl, sanitizeObjectName } from '@/lib/r2';
+import { createR2UploadUrl, getR2Usage, getStorageLimitBytes, sanitizeObjectName } from '@/lib/r2';
 
 const MB = 1024 * 1024;
 const GB = 1024 * MB;
@@ -28,6 +28,20 @@ export async function POST(request: Request) {
     }
     if (!Number.isFinite(fileSize) || fileSize <= 0 || fileSize > rule.maxSize) {
       return NextResponse.json({ error: `File size must be between 1 byte and ${rule.label}` }, { status: 400 });
+    }
+
+    // Storage limit: refuse the upload if the file would push us over it.
+    const limitBytes = getStorageLimitBytes();
+    const { usedBytes } = await getR2Usage();
+    if (usedBytes + fileSize > limitBytes) {
+      const limitGb = Number((limitBytes / 1024 ** 3).toFixed(2));
+      return NextResponse.json(
+        {
+          error: `تم الوصول للحد الأقصى للتخزين (${limitGb} جيجا) ولا يمكن رفع ملفات جديدة. / Storage limit reached (${limitGb} GB), new uploads are disabled.`,
+          code: 'STORAGE_LIMIT',
+        },
+        { status: 403 }
+      );
     }
 
     const key = `${folder}/${Date.now()}-${crypto.randomUUID()}-${fileName}`;
