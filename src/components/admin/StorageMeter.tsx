@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { HardDrive } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import Notice from '@/components/admin/Notice';
 import { panelCls } from '@/components/admin/ui';
 
 interface Usage {
@@ -74,15 +76,25 @@ export default function StorageMeter({ compact = false }: { compact?: boolean })
   );
 
   return (
-    <section className={`${panelCls} space-y-4 p-5`}>
+    <section className={`${panelCls} space-y-4 p-5 ${full ? 'border-red-500/40' : ''}`}>
       <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#2A1426] text-orbia-pink">
+        <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${full ? 'bg-red-500/15 text-red-400' : 'bg-[#2A1426] text-orbia-pink'}`}>
           <HardDrive className="h-5 w-5" />
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <h2 className="text-lg font-bold">{isRTL ? 'مساحة التخزين' : 'Storage'}</h2>
           <p className="text-xs text-gray-500">{isRTL ? 'الملفات المرفوعة على Cloudflare R2' : 'Files uploaded to Cloudflare R2'}</p>
         </div>
+        {usage && (
+          <span
+            className={`rounded-full px-3 py-1 text-sm font-bold ${
+              percent >= 95 ? 'bg-red-500/15 text-red-300' : percent >= 80 ? 'bg-amber-500/15 text-amber-300' : 'bg-[#2A1426] text-[#F08A97]'
+            }`}
+            dir="ltr"
+          >
+            {percent.toFixed(percent >= 10 ? 0 : 1)}%
+          </span>
+        )}
       </div>
 
       {failed && !usage ? (
@@ -90,25 +102,41 @@ export default function StorageMeter({ compact = false }: { compact?: boolean })
       ) : (
         <>
           <div className="grid grid-cols-3 gap-4">
-            {stat(isRTL ? 'الإجمالي' : 'Total', usage ? formatSize(usage.limitBytes, isRTL) : '...')}
             {stat(isRTL ? 'المستخدم' : 'Used', usage ? formatSize(usage.usedBytes, isRTL) : '...')}
             {stat(isRTL ? 'المتبقي' : 'Remaining', usage ? formatSize(usage.remainingBytes, isRTL) : '...')}
+            {stat(isRTL ? 'الإجمالي' : 'Total', usage ? formatSize(usage.limitBytes, isRTL) : '...')}
           </div>
           <div>
             <div className="h-3 overflow-hidden rounded-full bg-[#2A1426]">
               <div className={`h-full rounded-full ${barColor} transition-[width] duration-300`} style={{ width: `${percent}%` }} />
             </div>
-            <div className="mt-1.5 flex justify-between text-xs text-gray-500">
-              <span>{percent.toFixed(1)}%</span>
-              <span>{usage ? (isRTL ? `${usage.objectCount} ملف` : `${usage.objectCount} files`) : ''}</span>
+            <div className="mt-1.5 text-xs text-gray-500">
+              {usage ? (isRTL ? `${usage.objectCount} ملف` : `${usage.objectCount} files`) : ''}
             </div>
           </div>
           {full ? (
-            <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-              {isRTL ? 'تم الوصول للحد الأقصى. رفع الملفات الجديدة متوقف حتى يتم حذف ملفات.' : 'Limit reached. New uploads are disabled until files are deleted.'}
-            </p>
+            <Notice
+              tone="error"
+              title={isRTL ? 'تم الوصول للحد الأقصى للتخزين' : 'Storage limit reached'}
+              action={
+                <>
+                  <Link href="/admin/movies" className="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-semibold text-white hover:bg-white/15">
+                    {isRTL ? 'إدارة الأفلام' : 'Manage movies'}
+                  </Link>
+                  <Link href="/admin/photos" className="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-semibold text-white hover:bg-white/15">
+                    {isRTL ? 'إدارة الصور' : 'Manage photos'}
+                  </Link>
+                </>
+              }
+            >
+              {isRTL
+                ? 'رفع الملفات الجديدة متوقف. احذف بعض الأفلام أو الصور لتفريغ مساحة.'
+                : 'New uploads are disabled. Delete some movies or photos to free up space.'}
+            </Notice>
           ) : percent >= 95 ? (
-            <p className="text-sm text-red-300">{isRTL ? 'المساحة على وشك الانتهاء.' : 'Storage is almost full.'}</p>
+            <Notice tone="warning" title={isRTL ? 'المساحة على وشك الانتهاء' : 'Storage is almost full'}>
+              {isRTL ? 'سيتوقف رفع الملفات الجديدة عند الوصول للحد الأقصى.' : 'New uploads will stop when the limit is reached.'}
+            </Notice>
           ) : percent >= 80 ? (
             <p className="text-sm text-amber-300">{isRTL ? 'تم استخدام أكثر من 80% من المساحة.' : 'More than 80% of the storage is used.'}</p>
           ) : null}

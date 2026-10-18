@@ -1,5 +1,26 @@
 export type R2Folder = 'movies' | 'movie-thumbnails' | 'photos';
 
+export class UploadError extends Error {
+  code?: string;
+  constructor(message: string, code?: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
+// Turns an upload error into a message for the current language.
+export function describeUploadError(error: unknown, isRTL: boolean, fallback: string): { title?: string; text: string } {
+  if (error instanceof UploadError && error.code === 'STORAGE_LIMIT') {
+    return {
+      title: isRTL ? 'تم الوصول للحد الأقصى للتخزين' : 'Storage limit reached',
+      text: isRTL
+        ? 'لا يمكن رفع ملفات جديدة. احذف بعض الأفلام أو الصور لتفريغ مساحة ثم حاول مرة أخرى.'
+        : 'New uploads are disabled. Delete some movies or photos to free up space, then try again.',
+    };
+  }
+  return { text: error instanceof Error && error.message ? error.message : fallback };
+}
+
 // Asks the server for a presigned URL, uploads the file straight to R2 from the
 // browser, and resolves with the file's public URL.
 export async function uploadFileToR2(
@@ -13,7 +34,7 @@ export async function uploadFileToR2(
     body: JSON.stringify({ folder, fileName: file.name, contentType: file.type, fileSize: file.size }),
   });
   const prepared = await prepareResponse.json().catch(() => ({}));
-  if (!prepareResponse.ok) throw new Error(prepared.error || 'Could not prepare upload');
+  if (!prepareResponse.ok) throw new UploadError(prepared.error || 'Could not prepare upload', prepared.code);
 
   await new Promise<void>((resolve, reject) => {
     const request = new XMLHttpRequest();

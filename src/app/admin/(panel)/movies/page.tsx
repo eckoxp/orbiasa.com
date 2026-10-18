@@ -8,7 +8,8 @@ import Modal from '@/components/admin/Modal';
 import { notifyStorageChanged } from '@/components/admin/StorageMeter';
 import MovieThumb from '@/components/admin/MovieThumb';
 import { panelCls, inputCls, labelCls, primaryBtn, ghostBtn, iconBtn, chipCls } from '@/components/admin/ui';
-import { uploadFileToR2 } from '@/lib/uploadToR2';
+import { uploadFileToR2, describeUploadError } from '@/lib/uploadToR2';
+import Notice from '@/components/admin/Notice';
 interface Category {
   slug: string;
   name_ar: string;
@@ -25,6 +26,8 @@ export default function AdminMoviesPage() {
   const [cats, setCats] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [pageError, setPageError] = useState('');
+  const [formError, setFormError] = useState<{ title?: string; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
@@ -88,6 +91,7 @@ export default function AdminMoviesPage() {
     setVideoFile(null);
     setThumbFile(null);
     setProgress(0);
+    setFormError(null);
     setShowModal(true);
   };
 
@@ -97,6 +101,7 @@ export default function AdminMoviesPage() {
     setVideoFile(null);
     setThumbFile(null);
     setProgress(0);
+    setFormError(null);
     setShowModal(true);
   };
 
@@ -107,6 +112,7 @@ export default function AdminMoviesPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     setBusy(true);
     try {
       let videoUrl = form.video_url.trim();
@@ -135,7 +141,7 @@ export default function AdminMoviesPage() {
       notifyStorageChanged();
       setShowModal(false);
     } catch (error) {
-      alert(error instanceof Error ? error.message : isRTL ? 'تعذر حفظ الفيلم' : 'Error saving movie');
+      setFormError(describeUploadError(error, isRTL, isRTL ? 'تعذر حفظ الفيلم' : 'Error saving movie'));
     } finally {
       setBusy(false);
     }
@@ -143,13 +149,14 @@ export default function AdminMoviesPage() {
 
   const remove = async (m: MovieRow) => {
     if (!confirm(isRTL ? 'هل أنت متأكد من حذف هذا الفيلم؟' : 'Are you sure you want to delete this movie?')) return;
+    setPageError('');
     try {
       const res = await fetch(`/api/admin/movies/${m.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
       await load();
       notifyStorageChanged();
     } catch {
-      alert(isRTL ? 'تعذر حذف الفيلم' : 'Error deleting movie');
+      setPageError(isRTL ? 'تعذر حذف الفيلم' : 'Error deleting movie');
     }
   };
 
@@ -173,8 +180,11 @@ export default function AdminMoviesPage() {
         </button>
       </header>
 
-      {loadError && (
-        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-200">{loadError}</div>
+      {loadError && <Notice tone="warning">{loadError}</Notice>}
+      {pageError && (
+        <Notice tone="error" onClose={() => setPageError('')} closeLabel={isRTL ? 'إغلاق' : 'Close'}>
+          {pageError}
+        </Notice>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -340,6 +350,12 @@ export default function AdminMoviesPage() {
                 />
               </div>
             </div>
+
+            {formError && (
+              <Notice tone="error" title={formError.title}>
+                {formError.text}
+              </Notice>
+            )}
 
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={closeModal} className={ghostBtn}>

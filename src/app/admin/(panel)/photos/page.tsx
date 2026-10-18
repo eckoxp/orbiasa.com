@@ -7,7 +7,8 @@ import { Plus, Edit, Trash2, Save, Upload, Search } from 'lucide-react';
 import Modal from '@/components/admin/Modal';
 import { notifyStorageChanged } from '@/components/admin/StorageMeter';
 import { panelCls, inputCls, labelCls, primaryBtn, ghostBtn, iconBtn, chipCls } from '@/components/admin/ui';
-import { uploadFileToR2 } from '@/lib/uploadToR2';
+import { uploadFileToR2, describeUploadError } from '@/lib/uploadToR2';
+import Notice from '@/components/admin/Notice';
 interface Category {
   slug: string;
   name_ar: string;
@@ -22,6 +23,8 @@ export default function AdminPhotosPage() {
   const [cats, setCats] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [pageError, setPageError] = useState('');
+  const [formError, setFormError] = useState<{ title?: string; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
@@ -81,6 +84,7 @@ export default function AdminPhotosPage() {
     setEditing(null);
     setForm({ ...emptyForm, category: cats[0]?.slug ?? 'coverage' });
     setFile(null);
+    setFormError(null);
     setShowModal(true);
   };
 
@@ -94,6 +98,7 @@ export default function AdminPhotosPage() {
       description_en: p.description_en,
     });
     setFile(null);
+    setFormError(null);
     setShowModal(true);
   };
 
@@ -104,8 +109,9 @@ export default function AdminPhotosPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     if (!editing && !file) {
-      alert(isRTL ? 'اختر ملف الصورة أولاً.' : 'Please choose an image file first.');
+      setFormError({ text: isRTL ? 'اختر ملف الصورة أولاً.' : 'Please choose an image file first.' });
       return;
     }
     setBusy(true);
@@ -127,7 +133,7 @@ export default function AdminPhotosPage() {
       notifyStorageChanged();
       setShowModal(false);
     } catch (error) {
-      alert(error instanceof Error ? error.message : isRTL ? 'تعذر حفظ الصورة' : 'Error saving photo');
+      setFormError(describeUploadError(error, isRTL, isRTL ? 'تعذر حفظ الصورة' : 'Error saving photo'));
     } finally {
       setBusy(false);
     }
@@ -135,13 +141,14 @@ export default function AdminPhotosPage() {
 
   const remove = async (p: PhotoRow) => {
     if (!confirm(isRTL ? 'هل أنت متأكد من حذف هذه الصورة؟' : 'Are you sure you want to delete this photo?')) return;
+    setPageError('');
     try {
       const res = await fetch(`/api/admin/photos/${p.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
       await load();
       notifyStorageChanged();
     } catch {
-      alert(isRTL ? 'تعذر حذف الصورة' : 'Error deleting photo');
+      setPageError(isRTL ? 'تعذر حذف الصورة' : 'Error deleting photo');
     }
   };
 
@@ -163,8 +170,11 @@ export default function AdminPhotosPage() {
         </button>
       </header>
 
-      {loadError && (
-        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-200">{loadError}</div>
+      {loadError && <Notice tone="warning">{loadError}</Notice>}
+      {pageError && (
+        <Notice tone="error" onClose={() => setPageError('')} closeLabel={isRTL ? 'إغلاق' : 'Close'}>
+          {pageError}
+        </Notice>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -280,6 +290,12 @@ export default function AdminPhotosPage() {
                 <textarea rows={4} className={`${inputCls} resize-none`} value={form.description_ar} onChange={(e) => setForm({ ...form, description_ar: e.target.value })} required />
               </div>
             </div>
+
+            {formError && (
+              <Notice tone="error" title={formError.title}>
+                {formError.text}
+              </Notice>
+            )}
 
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={closeModal} className={ghostBtn}>
