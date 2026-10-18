@@ -19,13 +19,28 @@ const STORAGE_UPDATED_EVENT = 'storage-updated';
 // Call this after something was uploaded or deleted so every meter refreshes.
 export const notifyStorageChanged = () => window.dispatchEvent(new Event(STORAGE_UPDATED_EVENT));
 
-const GIB = 1024 ** 3;
-const MIB = 1024 ** 2;
+// Decimal units (1 GB = 1,000,000,000 bytes), the same way storage dashboards show sizes.
+const GB = 1000 ** 3;
+const MB = 1000 ** 2;
+const KB = 1000;
 
-const formatSize = (bytes: number, isRTL: boolean) =>
-  bytes >= GIB
-    ? `${(bytes / GIB).toFixed(2)} ${isRTL ? 'جيجا' : 'GB'}`
-    : `${(bytes / MIB).toFixed(1)} ${isRTL ? 'ميجا' : 'MB'}`;
+function formatSize(bytes: number, isRTL: boolean): { value: string; unit: string } {
+  if (bytes >= GB) return { value: String(Number((bytes / GB).toFixed(2))), unit: isRTL ? 'جيجا' : 'GB' };
+  if (bytes >= MB) return { value: (bytes / MB).toFixed(1), unit: isRTL ? 'ميجا' : 'MB' };
+  if (bytes >= KB) return { value: String(Math.round(bytes / KB)), unit: isRTL ? 'كيلو' : 'KB' };
+  return { value: String(bytes), unit: isRTL ? 'بايت' : 'B' };
+}
+
+function Size({ bytes, isRTL }: { bytes: number; isRTL: boolean }) {
+  const { value, unit } = formatSize(bytes, isRTL);
+  return (
+    <>
+      <span dir="ltr">{value}</span> <span>{unit}</span>
+    </>
+  );
+}
+
+const formatPercent = (percent: number) => (percent < 1 ? percent.toFixed(2) : percent < 10 ? percent.toFixed(1) : percent.toFixed(0));
 
 export default function StorageMeter({ compact = false }: { compact?: boolean }) {
   const { isRTL } = useLanguage();
@@ -51,32 +66,39 @@ export default function StorageMeter({ compact = false }: { compact?: boolean })
   }, [load]);
 
   const percent = usage ? Math.min(100, (usage.usedBytes / usage.limitBytes) * 100) : 0;
+  // A tiny amount of usage would be an invisible bar, so give it a minimum width.
+  const barWidth = usage && usage.usedBytes > 0 ? Math.max(percent, 1.5) : 0;
   const full = Boolean(usage) && usage!.remainingBytes <= 0;
   const barColor = percent >= 95 ? 'bg-red-500' : percent >= 80 ? 'bg-amber-500' : 'bg-orbia-pink';
+  const badgeColor =
+    percent >= 95 ? 'bg-red-500/15 text-red-300' : percent >= 80 ? 'bg-amber-500/15 text-amber-300' : 'bg-[#2A1426] text-[#F08A97]';
 
   if (compact) {
     return (
       <div className="space-y-1.5 px-3.5 py-3 text-xs">
         <div className="flex items-center justify-between text-[#C9B8C6]">
           <span>{isRTL ? 'التخزين' : 'Storage'}</span>
-          <span dir="ltr">{usage ? `${formatSize(usage.usedBytes, isRTL)} / ${formatSize(usage.limitBytes, isRTL)}` : failed ? '—' : '...'}</span>
+          <span>
+            {usage ? (
+              <>
+                <Size bytes={usage.usedBytes} isRTL={isRTL} /> / <Size bytes={usage.limitBytes} isRTL={isRTL} />
+              </>
+            ) : failed ? (
+              '—'
+            ) : (
+              '...'
+            )}
+          </span>
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-[#2A1426]">
-          <div className={`h-full rounded-full ${barColor} transition-[width] duration-300`} style={{ width: `${percent}%` }} />
+          <div className={`h-full rounded-full ${barColor} transition-[width] duration-300`} style={{ width: `${barWidth}%` }} />
         </div>
       </div>
     );
   }
 
-  const stat = (label: string, value: string) => (
-    <div>
-      <div className="text-sm text-gray-400">{label}</div>
-      <div className="mt-1 text-2xl font-bold" dir="ltr">{value}</div>
-    </div>
-  );
-
   return (
-    <section className={`${panelCls} space-y-4 p-5 ${full ? 'border-red-500/40' : ''}`}>
+    <section className={`${panelCls} space-y-5 p-5 ${full ? 'border-red-500/40' : ''}`}>
       <div className="flex items-center gap-3">
         <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${full ? 'bg-red-500/15 text-red-400' : 'bg-[#2A1426] text-orbia-pink'}`}>
           <HardDrive className="h-5 w-5" />
@@ -86,34 +108,46 @@ export default function StorageMeter({ compact = false }: { compact?: boolean })
           <p className="text-xs text-gray-500">{isRTL ? 'الملفات المرفوعة على Cloudflare R2' : 'Files uploaded to Cloudflare R2'}</p>
         </div>
         {usage && (
-          <span
-            className={`rounded-full px-3 py-1 text-sm font-bold ${
-              percent >= 95 ? 'bg-red-500/15 text-red-300' : percent >= 80 ? 'bg-amber-500/15 text-amber-300' : 'bg-[#2A1426] text-[#F08A97]'
-            }`}
-            dir="ltr"
-          >
-            {percent.toFixed(percent >= 10 ? 0 : 1)}%
+          <span className={`rounded-full px-3 py-1 text-sm font-bold ${badgeColor}`} dir="ltr">
+            {formatPercent(percent)}%
           </span>
         )}
       </div>
 
       {failed && !usage ? (
         <p className="text-sm text-amber-200">{isRTL ? 'تعذر قراءة المساحة. تأكد من إعدادات R2.' : 'Could not read storage usage. Check the R2 settings.'}</p>
+      ) : !usage ? (
+        <p className="text-sm text-gray-500">{isRTL ? 'جاري التحميل...' : 'Loading...'}</p>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-4">
-            {stat(isRTL ? 'المستخدم' : 'Used', usage ? formatSize(usage.usedBytes, isRTL) : '...')}
-            {stat(isRTL ? 'المتبقي' : 'Remaining', usage ? formatSize(usage.remainingBytes, isRTL) : '...')}
-            {stat(isRTL ? 'الإجمالي' : 'Total', usage ? formatSize(usage.limitBytes, isRTL) : '...')}
-          </div>
           <div>
-            <div className="h-3 overflow-hidden rounded-full bg-[#2A1426]">
-              <div className={`h-full rounded-full ${barColor} transition-[width] duration-300`} style={{ width: `${percent}%` }} />
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span className="text-4xl font-bold leading-tight">
+                <Size bytes={usage.usedBytes} isRTL={isRTL} />
+              </span>
+              <span className="text-gray-400">
+                {isRTL ? 'مستخدمة من' : 'used of'}{' '}
+                <span className="font-semibold text-gray-200">
+                  <Size bytes={usage.limitBytes} isRTL={isRTL} />
+                </span>
+              </span>
             </div>
-            <div className="mt-1.5 text-xs text-gray-500">
-              {usage ? (isRTL ? `${usage.objectCount} ملف` : `${usage.objectCount} files`) : ''}
+
+            <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#2A1426]">
+              <div className={`h-full rounded-full ${barColor} transition-[width] duration-300`} style={{ width: `${barWidth}%` }} />
+            </div>
+
+            <div className="mt-2 flex items-center justify-between text-sm text-gray-400">
+              <span>
+                {isRTL ? 'المتبقي:' : 'Remaining:'}{' '}
+                <span className="font-semibold text-gray-200">
+                  <Size bytes={usage.remainingBytes} isRTL={isRTL} />
+                </span>
+              </span>
+              <span>{isRTL ? `${usage.objectCount} ملف` : `${usage.objectCount} files`}</span>
             </div>
           </div>
+
           {full ? (
             <Notice
               tone="error"

@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     const limitBytes = getStorageLimitBytes();
     const { usedBytes } = await getR2Usage();
     if (usedBytes + fileSize > limitBytes) {
-      const limitGb = Number((limitBytes / 1024 ** 3).toFixed(2));
+      const limitGb = Number((limitBytes / 1000 ** 3).toFixed(2));
       return NextResponse.json(
         {
           error: `تم الوصول للحد الأقصى للتخزين (${limitGb} جيجا) ولا يمكن رفع ملفات جديدة. / Storage limit reached (${limitGb} GB), new uploads are disabled.`,

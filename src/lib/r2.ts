@@ -66,12 +66,13 @@ export const deleteReplacedR2Files = async (
 };
 
 // ---- Storage meter ----------------------------------------------------------------
-const GIB = 1024 ** 3;
+// Decimal units (1 GB = 1,000,000,000 bytes), like storage providers' dashboards.
+const GB = 1000 ** 3;
 
 // The limit is ours, not Cloudflare's. Change it with STORAGE_LIMIT_GB (default 200).
 export const getStorageLimitBytes = (): number => {
   const gb = Number(process.env.STORAGE_LIMIT_GB);
-  return (Number.isFinite(gb) && gb > 0 ? gb : 200) * GIB;
+  return (Number.isFinite(gb) && gb > 0 ? gb : 200) * GB;
 };
 
 // Adds up the size of every file currently in the bucket. Files that still live on
