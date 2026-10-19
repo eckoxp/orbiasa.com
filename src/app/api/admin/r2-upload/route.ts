@@ -8,7 +8,7 @@ const GB = 1024 * MB;
 const rules = {
   movies: { types: /^video\/(mp4|webm|quicktime)$/, maxSize: 5 * GB, label: '5 GB' },
   'movie-thumbnails': { types: /^image\/(jpeg|png|webp|gif)$/, maxSize: 10 * MB, label: '10 MB' },
-  photos: { types: /^image\/(jpeg|png|webp|gif)$/, maxSize: 25 * MB, label: '25 MB' },
+  photos: { types: /^image\/(jpeg|png|webp|gif)$/, maxSize: 100 * MB, label: '100 MB' },
 } as const;
 
 export async function POST(request: Request) {
