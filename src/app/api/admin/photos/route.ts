@@ -1,6 +1,17 @@
 import { NextResponse } from 'next/server';
-import { sql, PhotoCategory } from '@/lib/db';
-import { deleteReplacedR2Files } from '@/lib/r2';
+import { ensureTables, sql, PhotoCategory } from '@/lib/db';
+
+const groupedPhotos = () => sql`
+  SELECT group_id::text AS id, group_id::text AS group_id, category, title_ar, title_en,
+    description_ar, description_en,
+    (array_agg(image_url ORDER BY created_at, id))[1] AS image_url,
+    array_agg(image_url ORDER BY created_at, id) AS image_urls,
+    COUNT(*)::int AS image_count,
+    MIN(created_at) AS created_at, MAX(updated_at) AS updated_at
+  FROM photos
+  GROUP BY group_id, category, title_ar, title_en, description_ar, description_en
+  ORDER BY MIN(created_at) DESC;
+`;
 
 export async function POST(req: Request) {
   const form = await req.formData();
@@ -10,45 +21,40 @@ export async function POST(req: Request) {
   const title_en = String(form.get('title_en') || '');
   const description_ar = String(form.get('description_ar') || '');
   const description_en = String(form.get('description_en') || '');
-  const image_url = String(form.get('image_url') || '');
+  const image_urls = form.getAll('image_url').map(String).filter(Boolean);
   
   if (!category || !title_ar || !title_en || !description_ar || !description_en) {
     return NextResponse.json({ ok: false, error: 'Missing fields' }, { status: 400 });
   }
   
-  // The file this record used before the edit; a replaced one is removed from R2 after saving.
-  const previous = id
-    ? ((await sql`SELECT image_url FROM photos WHERE id = ${id};`.catch(() => [])) as Record<string, string | null>[])[0]
-    : undefined;
-
   try {
+    await ensureTables();
     if (id) {
-      // Update existing photo
-      if (image_url) {
+      await sql`
+        UPDATE photos
+        SET category = ${category}, title_ar = ${title_ar}, title_en = ${title_en},
+            description_ar = ${description_ar}, description_en = ${description_en}, updated_at = NOW()
+        WHERE group_id = ${id};
+      `;
+      for (const imageUrl of image_urls) {
         await sql`
-          UPDATE photos 
-          SET category = ${category}, title_ar = ${title_ar}, title_en = ${title_en}, 
-              description_ar = ${description_ar}, description_en = ${description_en}, 
-              image_url = ${image_url}, updated_at = NOW()
-          WHERE id = ${id};
-        `;
-      } else {
-        // Update without changing image
-        await sql`
-          UPDATE photos 
-          SET category = ${category}, title_ar = ${title_ar}, title_en = ${title_en}, 
-              description_ar = ${description_ar}, description_en = ${description_en}, updated_at = NOW()
-          WHERE id = ${id};
+          INSERT INTO photos (group_id,category,title_ar,title_en,description_ar,description_en,image_url)
+          VALUES (${id}, ${category}, ${title_ar}, ${title_en}, ${description_ar}, ${description_en}, ${imageUrl});
         `;
       }
     } else {
-      // The browser uploads the file directly to R2 before saving this record.
-      if (!image_url) {
-        return NextResponse.json({ ok: false, error: 'Image file is required for new photos' }, { status: 400 });
+      if (image_urls.length === 0) {
+        return NextResponse.json({ ok: false, error: 'At least one image is required' }, { status: 400 });
       }
-      await sql`INSERT INTO photos (category,title_ar,title_en,description_ar,description_en,image_url) VALUES (${category}, ${title_ar}, ${title_en}, ${description_ar}, ${description_en}, ${image_url});`;
+      const groupRows = (await sql`SELECT gen_random_uuid()::text AS id;`) as Record<string, string>[];
+      const groupId = String(groupRows[0].id);
+      for (const imageUrl of image_urls) {
+        await sql`
+          INSERT INTO photos (group_id,category,title_ar,title_en,description_ar,description_en,image_url)
+          VALUES (${groupId}, ${category}, ${title_ar}, ${title_en}, ${description_ar}, ${description_en}, ${imageUrl});
+        `;
+      }
     }
-    await deleteReplacedR2Files([previous?.image_url], [image_url || previous?.image_url]);
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e);
@@ -58,8 +64,8 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
-    const rows = await sql`SELECT * FROM photos ORDER BY created_at DESC;`;
-    return NextResponse.json(rows);
+    await ensureTables();
+    return NextResponse.json(await groupedPhotos());
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: message }, { status: 500 });

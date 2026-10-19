@@ -32,14 +32,14 @@ export default function AdminPhotosPage() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<PhotoRow | null>(null);
   const [form, setForm] = useState(emptyForm);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
 
-  const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  const previews = useMemo(() => files.map((file) => URL.createObjectURL(file)), [files]);
   useEffect(() => {
     return () => {
-      if (preview) URL.revokeObjectURL(preview);
+      previews.forEach((preview) => URL.revokeObjectURL(preview));
     };
-  }, [preview]);
+  }, [previews]);
 
   const load = useCallback(async () => {
     try {
@@ -83,7 +83,7 @@ export default function AdminPhotosPage() {
   const openAdd = () => {
     setEditing(null);
     setForm({ ...emptyForm, category: cats[0]?.slug ?? 'coverage' });
-    setFile(null);
+    setFiles([]);
     setFormError(null);
     setShowModal(true);
   };
@@ -97,7 +97,7 @@ export default function AdminPhotosPage() {
       description_ar: p.description_ar,
       description_en: p.description_en,
     });
-    setFile(null);
+    setFiles([]);
     setFormError(null);
     setShowModal(true);
   };
@@ -110,8 +110,8 @@ export default function AdminPhotosPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
-    if (!editing && !file) {
-      setFormError({ text: isRTL ? 'اختر ملف الصورة أولاً.' : 'Please choose an image file first.' });
+    if (!editing && files.length === 0) {
+      setFormError({ text: isRTL ? 'اختر صورة واحدة على الأقل.' : 'Please choose at least one image.' });
       return;
     }
     setBusy(true);
@@ -122,7 +122,9 @@ export default function AdminPhotosPage() {
       fd.append('title_en', form.title_en);
       fd.append('description_ar', form.description_ar);
       fd.append('description_en', form.description_en);
-      if (file) fd.append('image_url', await uploadFileToR2(file, 'photos'));
+      for (const file of files) {
+        fd.append('image_url', await uploadFileToR2(file, 'photos'));
+      }
       if (editing) fd.append('id', editing.id);
 
       const res = await fetch('/api/admin/photos', { method: 'POST', body: fd });
@@ -162,11 +164,15 @@ export default function AdminPhotosPage() {
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">{isRTL ? 'الصور' : 'Photos'}</h1>
-          <p className="mt-1 text-sm text-gray-400">{isRTL ? `${photos.length} صورة` : `${photos.length} photos`}</p>
+          <p className="mt-1 text-sm text-gray-400">
+            {isRTL
+              ? `${photos.length} مشروع · ${photos.reduce((sum, p) => sum + (p.image_count || p.image_urls?.length || 1), 0)} صورة`
+              : `${photos.length} projects · ${photos.reduce((sum, p) => sum + (p.image_count || p.image_urls?.length || 1), 0)} photos`}
+          </p>
         </div>
         <button onClick={openAdd} className={primaryBtn}>
           <Plus className="h-4 w-4" />
-          {isRTL ? 'إضافة صورة' : 'Add photo'}
+          {isRTL ? 'إضافة مشروع صور' : 'Add photo project'}
         </button>
       </header>
 
@@ -206,9 +212,14 @@ export default function AdminPhotosPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visible.map((p) => (
-            <div key={p.id} className={`${panelCls} flex flex-col overflow-hidden`}>
+            <div key={p.id} className={`${panelCls} relative flex flex-col overflow-hidden`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.image_url} alt={isRTL ? p.title_ar : p.title_en} className="h-44 w-full object-cover" />
+              {(p.image_count || p.image_urls?.length || 1) > 1 && (
+                <span className="absolute m-3 rounded-full bg-black/75 px-2.5 py-1 text-xs font-bold text-white">
+                  {p.image_count || p.image_urls?.length} {isRTL ? 'صور' : 'photos'}
+                </span>
+              )}
               <div className="flex flex-1 flex-col gap-1.5 p-4">
                 <div dir="auto" className="font-bold leading-6">{isRTL ? p.title_ar : p.title_en}</div>
                 <div dir="auto" className="text-[13px] text-gray-400">{isRTL ? p.title_en : p.title_ar}</div>
@@ -232,7 +243,7 @@ export default function AdminPhotosPage() {
 
       {showModal && (
         <Modal
-          title={editing ? (isRTL ? 'تعديل صورة' : 'Edit photo') : isRTL ? 'إضافة صورة جديدة' : 'Add new photo'}
+          title={editing ? (isRTL ? 'تعديل مشروع الصور' : 'Edit photo project') : isRTL ? 'إضافة مشروع صور جديد' : 'Add new photo project'}
           closeLabel={isRTL ? 'إغلاق' : 'Close'}
           onClose={closeModal}
         >
@@ -249,24 +260,30 @@ export default function AdminPhotosPage() {
             </div>
 
             <div>
-              <label className={labelCls}>{isRTL ? 'ملف الصورة' : 'Image file'}</label>
+              <label className={labelCls}>{isRTL ? 'صور المشروع' : 'Project images'}</label>
               <label className="flex cursor-pointer items-center gap-4 rounded-lg border-2 border-dashed border-[#25252F] p-4 transition-colors hover:border-orbia-pink">
-                {preview || editing?.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={preview || editing?.image_url || ''} alt="" className="h-20 w-28 rounded-lg object-cover" />
-                ) : (
-                  <Upload className="h-8 w-8 text-gray-400" />
-                )}
+                <Upload className="h-8 w-8 shrink-0 text-gray-400" />
                 <span className="text-sm text-gray-300">
-                  {file ? file.name : isRTL ? 'اختر صورة من جهازك' : 'Choose an image from your device'}
+                  {files.length > 0
+                    ? (isRTL ? `تم اختيار ${files.length} صورة` : `${files.length} images selected`)
+                    : (isRTL ? 'اختر صورة أو عدة صور من جهازك' : 'Choose one or multiple images')}
                 </span>
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   className="hidden"
-                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  onChange={(e) => setFiles(Array.from(e.target.files || []))}
                 />
               </label>
+              {(previews.length > 0 || editing?.image_urls?.length) && (
+                <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                  {(previews.length > 0 ? previews : editing?.image_urls || [editing?.image_url || '']).map((src, index) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={`${src}-${index}`} src={src} alt="" className="aspect-square w-full rounded-lg object-cover" />
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -303,7 +320,7 @@ export default function AdminPhotosPage() {
               </button>
               <button type="submit" disabled={busy} className={primaryBtn}>
                 <Save className="h-4 w-4" />
-                {busy ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editing ? (isRTL ? 'تحديث الصورة' : 'Update photo') : isRTL ? 'إضافة الصورة' : 'Add photo'}
+                {busy ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editing ? (isRTL ? 'تحديث المشروع' : 'Update project') : isRTL ? 'إضافة المشروع' : 'Add project'}
               </button>
             </div>
           </form>

@@ -16,12 +16,15 @@ export interface MovieRow {
 
 export interface PhotoRow {
   id: string;
+  group_id?: string;
   category: PhotoCategory;
   title_ar: string;
   title_en: string;
   description_ar: string;
   description_en: string;
   image_url: string;
+  image_urls?: string[];
+  image_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -86,6 +89,7 @@ export async function ensureTables(): Promise<void> {
   await sql`
     CREATE TABLE IF NOT EXISTS photos (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      group_id uuid NOT NULL DEFAULT gen_random_uuid(),
       category text NOT NULL,
       title_ar text NOT NULL,
       title_en text NOT NULL,
@@ -97,6 +101,10 @@ export async function ensureTables(): Promise<void> {
     );
   `;
   await sql`ALTER TABLE photos DROP CONSTRAINT IF EXISTS photos_category_check;`;
+  await sql`ALTER TABLE photos ADD COLUMN IF NOT EXISTS group_id uuid DEFAULT gen_random_uuid();`;
+  await sql`UPDATE photos SET group_id = id WHERE group_id IS NULL;`;
+  await sql`ALTER TABLE photos ALTER COLUMN group_id SET NOT NULL;`;
+  await sql`CREATE INDEX IF NOT EXISTS photos_group_id_idx ON photos(group_id);`;
 
   // Seed default categories
   await sql`INSERT INTO movie_categories (slug, name_ar, name_en) VALUES

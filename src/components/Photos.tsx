@@ -102,7 +102,14 @@ const Photos = () => {
     ]
   };
 
-  type DbPhoto = { id: string; category: string; image_url: string };
+  type DbPhoto = {
+    id: string;
+    category: string;
+    image_url: string;
+    image_urls?: string[];
+    title_ar: string;
+    title_en: string;
+  };
   const [dbPhotos, setDbPhotos] = useState<DbPhoto[]>([]);
   const [photosLoaded, setPhotosLoaded] = useState(false);
   useEffect(() => {
@@ -142,13 +149,11 @@ const Photos = () => {
     };
   }, [lightbox]);
 
-  const mergedImages = (key: keyof typeof sampleImages): string[] => {
-    const filtered = dbPhotos.filter((p) => p.category === key);
-    return filtered.map((p) => p.image_url);
-  };
+  const projectsForCategory = (key: keyof typeof sampleImages): DbPhoto[] =>
+    dbPhotos.filter((project) => project.category === key);
 
   const handleLoadMore = (key: keyof typeof sampleImages) => {
-    const total = dbPhotos.filter((photo) => photo.category === key).length;
+    const total = projectsForCategory(key).length;
     setVisibleCounts((prev) => {
       const current = prev[key as string] ?? 4;
       return { ...prev, [key]: Math.min(total, current + 4) };
@@ -163,12 +168,12 @@ const Photos = () => {
   const CategoryGrid: React.FC<{
     title: string;
     description: string;
-    images: string[];
+    projects: DbPhoto[];
     categoryIndex: number;
     categoryKey: string;
-  }> = ({ title, description, images, categoryIndex, categoryKey }) => {
+  }> = ({ title, description, projects, categoryIndex, categoryKey }) => {
     const visible = visibleCounts[categoryKey] ?? 4;
-    const displayedImages = images.slice(0, visible);
+    const displayedProjects = projects.slice(0, visible);
 
     return (
       <div className="mb-32">
@@ -190,20 +195,23 @@ const Photos = () => {
         {/* Enhanced Photo Grid - matching Movies layout */}
         <div className="relative left-1/2 right-1/2 w-screen -ml-[50vw] -mr-[50vw] max-w-none">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 px-4 sm:px-6 lg:px-8">
-            {displayedImages.map((src, imageIndex) => (
+            {displayedProjects.map((project) => {
+              const projectImages = project.image_urls?.length ? project.image_urls : [project.image_url];
+              const projectTitle = isRTL ? project.title_ar : project.title_en;
+              return (
               <button
-                key={imageIndex}
+                key={project.id}
                 type="button"
                 className="group block w-full cursor-zoom-in text-left"
-                onClick={() => setLightbox({ images, index: imageIndex, title })}
-                aria-label={isRTL ? `فتح الصورة ${imageIndex + 1}` : `Open image ${imageIndex + 1}`}
+                onClick={() => setLightbox({ images: projectImages, index: 0, title: projectTitle })}
+                aria-label={isRTL ? `فتح مشروع ${projectTitle}` : `Open project ${projectTitle}`}
               >
                 <div className="relative">
                   {/* Enhanced Photo Card - matching Movies design */}
                   <div className="relative aspect-video rounded-3xl overflow-hidden bg-white shadow-lg hover:shadow-3xl transition-all duration-700 transform hover:-translate-y-2 hover:scale-[1.02] border border-gray-100">
                     <img 
-                      src={src} 
-                      alt={`photo-${imageIndex}`} 
+                      src={project.image_url}
+                      alt={projectTitle}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                     />
                     
@@ -216,14 +224,23 @@ const Photos = () => {
                     <div className="absolute bottom-4 right-4 w-2 h-2 bg-orbia-pink/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <div className="absolute bottom-6 right-6 w-1 h-1 bg-orbia-pink/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                   </div>
+                  {projectImages.length > 1 && (
+                    <span className="absolute end-4 top-4 rounded-full bg-black/70 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-sm">
+                      {projectImages.length} {isRTL ? 'صور' : 'photos'}
+                    </span>
+                  )}
+                </div>
+                <div dir="auto" className={`mt-4 text-center text-base font-bold text-white ${isRTL ? 'font-arabic' : 'font-english'}`}>
+                  {projectTitle}
                 </div>
               </button>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         {/* Enhanced Load More Button - matching Movies design */}
-        {visible < images.length && (
+        {visible < projects.length && (
           <div className="text-center mt-12">
             <button
               onClick={() => handleLoadMore(categoryKey as keyof typeof sampleImages)}
@@ -258,13 +275,13 @@ const Photos = () => {
 
         {activeCategories.map((category, index) => {
           const key = category.key as keyof typeof sampleImages;
-          const images = mergedImages(key);
+          const projects = projectsForCategory(key);
           return (
             <ScrollReveal key={category.key} y={28} durationMs={600}>
               <CategoryGrid
                 title={category.title}
                 description={t(`photos.${category.key}.description`)}
-                images={images}
+                projects={projects}
                 categoryIndex={index}
                 categoryKey={category.key}
               />
@@ -319,7 +336,8 @@ const Photos = () => {
               className="max-h-[82vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl"
             />
             <div className={`text-sm text-white/80 ${isRTL ? 'font-arabic' : 'font-english'}`}>
-              {lightbox.index + 1} / {lightbox.images.length}
+              <div className="mb-1 text-center text-base font-bold text-white">{lightbox.title}</div>
+              <div className="text-center">{lightbox.index + 1} / {lightbox.images.length}</div>
             </div>
           </div>
 
